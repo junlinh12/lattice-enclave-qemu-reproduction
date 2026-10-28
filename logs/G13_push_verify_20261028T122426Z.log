@@ -1,0 +1,65 @@
+
+==================== META ====================
+gate=G13 (v1) timestamp_utc=20261028T122426Z target=junlinh12/lattice-enclave-qemu-reproduction
+
+==================== 1. Commit identities ====================
+
+$ git log --format='%h %an <%ae> | %cn <%ce> | %ad' --date=iso-strict
+b8f8164 junlinh12 <<EMAIL>> | junlinh12 <<EMAIL>> | 2026-10-28T12:24:15+00:00
+81ac1f9 junlinh12 <<EMAIL>> | junlinh12 <<EMAIL>> | 2026-10-28T08:00:56+00:00
+43b7574 junlinh12 <<EMAIL>> | junlinh12 <<EMAIL>> | 2026-10-28T07:37:36+00:00
+(exit=0)
+
+$ git status --short
+?? logs/G13_push_verify_20261028T122426Z.log
+(exit=0)
+
+==================== 2. Remote + push ====================
+
+$ git remote -v
+origin	https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git (fetch)
+origin	https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git (push)
+(exit=0)
+
+$ git push -u origin main
+Everything up-to-date
+branch 'main' set up to track 'origin/main'.
+(exit=0)
+local=b8f816478913ff746a9a974823fc623f4ffb84b2 remote=b8f816478913ff746a9a974823fc623f4ffb84b2
+
+==================== 3. Fresh clone + leak scan of what GitHub serves ====================
+
+$ git clone -q https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git '$HOME/projects/lattice-enclave-qemu-reproduction/work/verify_clone'
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/verify_clone' ls-files | cut -d/ -f1 | sort | uniq -c
+      1 docs
+      1 env.sh
+      1 fw_params.env
+      1 .gitignore
+     47 logs
+      3 patches
+      1 README.md
+     14 scripts
+      1 SOURCES_PINNED.txt
+      5 tests
+(exit=0)
+scan($HOME/projects/lattice-enclave-qemu-reproduction/work/verify_clone -> 75 files): fail_hits=0
+
+==================== 4. Visibility ====================
+unauthenticated GitHub API status: 404
+
+==================== SUMMARY ====================
+[PASS] all author/committer e-mails are GitHub noreply
+[PASS] all commit dates in UTC
+[WARN] uncommitted changes (only committed content is pushed)
+[PASS] origin points to junlinh12/lattice-enclave-qemu-reproduction
+[PASS] pushed main
+[PASS] remote main == local HEAD
+[PASS] fresh clone OK
+[PASS] clone contains only allowlisted paths
+[PASS] no GATE0/raw/work/sources artifacts in clone
+[PASS] leak scan of published content: clean
+[INFO] repository is PRIVATE (switch to public after reviewing on github.com)
+
+RESULT: FAIL=0 WARN=1
