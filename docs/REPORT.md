@@ -8,10 +8,14 @@ gate log that holds its evidence.
 
 - **Target**: LatticeEnclave/Lattice, commit `05664a2` (upstream `main`,
   2025-05-26), built for `platform/qemu-virt`.
-- **Paper**: ACM DL 10.1145/3844614. The paper could not be retrieved from the
-  build environment, so this report does not compare against the paper's
-  figures. It gives a functional reproduction and a characterisation of the
-  public code.
+- **Paper**: Y. Zhao, J. He, M. Xu, W. Chen, W. Qiang, D. Zou, *Lattice:
+  Enabling Scalable Enclaves for Commercial RISC-V Platforms*, ACM TACO 23(4),
+  Article 132, Dec 2026, doi:10.1145/3844614. README §2 compares the paper
+  claim by claim with the public code. In short, the non-intrusive SM, trap
+  proxy, DPMP, PMA model, host-allocated memory and edge calls are present and
+  were exercised here. The EM-based enclave API, frontend–backend DPMP, secure
+  trap proxy (ePMP) and the paper's benchmark harness are not in the public
+  code.
 - **Method**: work proceeds in numbered *gates*. Each gate is one script in
   `scripts/` with explicit PASS/WARN/FAIL checks and one log in `logs/`.
   Every 5th gate re-reads the main task statement (checkpoints at G05 and G10).

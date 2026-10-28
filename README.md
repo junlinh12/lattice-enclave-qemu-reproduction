@@ -1,448 +1,460 @@
-# CoVE KVM RISCV64 on QEMU：复现记录与手动命令工作版
+# Lattice Enclave — Reproduction on QEMU (RISC-V)
 
-更新日期：2026-10-05（JST）。状态：**端到端复现未完成；尚未取得补丁版 TVM 的实际执行结果。**
+Independent, step-by-step reproduction of **Lattice**:
 
-目标来源：[rivosinc/cove 官方 Wiki](https://github.com/rivosinc/cove/wiki/CoVE-KVM-RISCV64-on-QEMU)。本项目以该页面的可观测运行结果为验收依据。历史源码恢复、构建和排障都服务于这一目标。
+> Y. Zhao, J. He, M. Xu, W. Chen, W. Qiang, D. Zou. *Lattice: Enabling Scalable
+> Enclaves for Commercial RISC-V Platforms.* ACM Transactions on Architecture
+> and Code Optimization (TACO) 23(4), Article 132, December 2026.
+> [doi:10.1145/3844614](https://doi.org/10.1145/3844614) · upstream code:
+> [LatticeEnclave/Lattice](https://github.com/LatticeEnclave/Lattice)
 
-这份 README 是当前工作版，已经建立日志规范、版本基线、已验证命令和最终验收点。它还不是在全新机器上验证通过的完整安装手册。历史依赖恢复、全新目录重建、Wiki 参数对齐和最终 TVM 运行仍有未完成项，见第 9 节。
+The upstream code (commit `05664a2`) is built and run on QEMU `virt` with an
+Ubuntu 24.04 riscv64 guest. Section 2 compares what the paper describes with
+what the public code implements and what could be reproduced here.
 
-## 1. 完成标准
+This repository is part A-1 of a larger study that reproduces three RISC-V
+TEEs (Lattice, IBM ACE, RISC-V OP-TEE) on QEMU and then ports them to a
+Milk-V Jupiter 2 board (SpacemiT K3, RVA23).
 
-主线：QEMU → OpenSBI / Salus → RISC-V Host Linux → Host KVM → kvmtool 的 CoVE TVM → TVM 内部 Linux 和用户态。
+---
 
-最终日志必须同时证明以下结果，并能区分 Host 与 TVM 的输出来源：
+## 0. Result at a glance
 
-| 验收项 | 所需直接证据 | 当前状态 |
-| --- | --- | --- |
-| Salus 和 Host 启动 | 完整外层控制台、Host 内的内核身份 | 历史启动已通过 |
-| Host KVM / CoVE 可用 | KVM 设备、Host 初始化消息、TSM 就绪信息 | S55、G1 已通过 |
-| 实际请求 CoVE TVM | 实际执行的 kvmtool 命令含 CoVE 选项，且有对应 Host 侧证据 | 原版执行有证据；补丁版未执行 |
-| TVM Linux 与 SMP | 同一次 TVM 执行中的 Guest 内核输出、两颗 CPU 启动证据 | 未通过 |
-| TVM 根文件系统与用户态 | Guest 根文件系统挂载、初始化进程启动、可交互 shell | 未通过 |
-| TVM 网络与中断 | 在 TVM shell 内执行 `ifconfig`、`cat /proc/interrupts` 的结果 | 未通过 |
-| 可以重复执行 | 从已审查输入重新执行相同步骤，再取得相同层级结果 | 未通过 |
-| 可以公开复现 | 命令、版本、补丁、脱敏日志和结果索引对应完整 | 未通过 |
+| Item | Outcome | Evidence (`logs/`) |
+|---|---|---|
+| Build SM, OpenSBI + SM, U-Boot, enclave runtime, client and kernel module from pinned commits | ✅ reproducible (identical `sm.bin` hash across rebuilds) | G04, G05 |
+| Non-intrusive SM inside OpenSBI; boot OpenSBI → SM → U-Boot → GRUB → Linux 7.0 on 4 harts | ✅ | G05, G07 |
+| Enclaves supported by the public code: service enclave (LSE) and user enclave (LUE) | ✅ run, syscall proxy, clean exit, 30+ sequential runs | G09, G10 |
+| 2 / 4 / 8 concurrent enclaves (8 > number of harts) | ✅ all correct | G10 |
+| Linux under memory pressure next to the SM | ❌ upstream hangs → ✅ fixed by patch 0003 | G10, G11 |
+| Paper's evaluation (rv8, SQLite3, Llama2.c, FSCQ, darkhttpd, 2048 enclaves, cycle counts) | ⚠️ not reproduced: no benchmark harness in the public repo, and QEMU TCG is not cycle-accurate | §2.3 |
+| Secure trap proxy (ePMP), driver enclave (LDE) | ⚠️ not present in the public code | §2.2 |
 
-Linux 第一行输出只代表进入内核。TVM instance 创建只代表生命周期的一部分。静态构建、端口监听、Host 初始化、日志采集成功，都不能单独替代上述最终结果。
+---
 
-本项目复现该 PoC 的功能结果，不据此声称已验证所有安全属性、远程证明或生产部署能力。TVM 长时间运行时，必须说明退出是正常结束、用户主动停止还是观测超时；不能只以退出码 0 判定启动成功。
+## 1. Terminology: paper ↔ public code
 
-## 2. 从本版起执行的工作规范
+| Paper | Public code (`05664a2`) |
+|---|---|
+| Secure Monitor (SM), M-mode, Rust (§4, §6) | `crates/sm` + `platform/qemu-virt` (Rust `no_std`), linked at `0x8001e000` and embedded into OpenSBI as section `.sm` |
+| Untrusted application (UAPP) that creates an enclave (§4.2.2) | `crates/client` (Linux program) |
+| Enclave Runtime (ERT) (§4) | `runtime/` + `crates/rt` → `runtime.bin` (`fw-rt.bin`) |
+| Enclave Application (EAPP), "unmodified original ELF" (§4) | any static RISC-V ELF, e.g. `tests/enclave/hello.c` |
+| Enclave Manager (EM), one per enclave, plus EM #0 for the normal world (§4.2.1) | no separate EM component; the runtime of a **Linux Service Enclave (LSE)** is shared by every **Linux User Enclave (LUE)** |
+| Host memory for enclaves from the OS allocator (`GFP_HIGHUSER`, ≤ 2^MAX_ORDER pages per block) (§7.2.1) | `linux/modules/tee_mod` (`/dev/teectl`): `alloc_pages(GFP_HIGHUSER, order ≤ MAX_ORDER)` + `remap_pfn_range` |
+| Physical Memory Areas (PMAs) with owner and permission, `EVERYONE` owner (§4) | `crates/pma` (`Owner::EVERYONE = 0`, `Owner::HOST = 1`) |
 
-1. **1 Step → 1 个权威原始 `.log` → 审查 → 下一 Step。** 一个 Step 有一个明确目的和验收点。记录命令、来源和产物所需的辅助命令属于同一 Step；独立构建、传输、启动等操作分别建 Step。
-2. 每次给出可逐条输入的 Linux commandline，配套说明运行位置、输入、作用、退出码和预期输出。多行续写仅用于一条命令过长的情况。
-3. 不再下发实验编排 `.sh`，不使用 `bash run-*.sh`、`source` 一个编排文件、长 `bash -c` 或隐藏循环／函数来串联实验。旧日志是证据，绝不作为命令文件执行。
-4. `script` 是终端记录工具；`make`、Bazel、仓库自带的配置／固件生成工具是明确列出的构建命令。它们与助手提供的实验编排脚本不同。使用仓库工具时仍记录其仓库路径、提交和用途。
-5. 一个 Step 完成后，用户上传该原始日志。审查报告给出 PASS / FAIL / BLOCKED，并区分“命令执行结果”和“被验证目标的结果”。
-6. 旧日志保留原字节；新的手动流程不会倒填到旧日志中，也不会把旧失败改写成成功。
-7. 每个涉及源码的 Step 记录 repository-relative path、commit、符号或行范围，以及 READ / BUILD / MODIFY。只查系统状态时明确写 `SOURCE_CODE_INVOLVED=NO`；若读取 Git 元数据，另列 `REPO_METADATA_READ=YES`。
-8. 不修改冻结 parent 或主 rootfs；实验使用隔离 worktree 和运行磁盘副本。失败目录保留，重试使用新的步骤标识和目录。
-9. 每个排障 Step 必须影响一个主线决策。相同症状不反复扩展检查；若信息不足，说明还缺什么，以及为什么它影响下一动作。
+---
 
-### 对当前方式的自评
+## 2. Paper vs. public implementation vs. this reproduction
 
-| 用户要求 | 调整前的情况 | 本版调整 | 尚待证明 |
-| --- | --- | --- | --- |
-| 1Step1log | 大部分 Gate 有原始日志，但一个包装脚本常包括多个目的 | 以单一验收点划分 Step；失败后不自动进入下一实验 | 后续实际操作遵守新规范 |
-| 手动 commandline | 不满足：包装脚本数量多、正文转储多，难以直接理解 | 停止使用实验包装脚本；建立手动记录模板和命令目录 | 新手动命令逐步经过现场验证 |
-| GitHub 安全脱敏 | 不满足：原始日志带真实本地身份和路径，尚无审查后的公开集合 | 原始证据保留；只发布独立脱敏副本；建立发布范围和检查方法 | 实际制作、逐文件复核公开日志 |
-| 详细 README | 不满足：重建报告和零散脚本不能替代完整操作手册 | 创建本工作版；后续每个 PASS Step 回填实际命令与证据 | 全新目录复现和完整 TVM 结果 |
+### 2.1 Mechanisms that are present and were exercised
 
-## 3. Wiki 版本、参数差异与实验边界
+| Paper claim | Public code | Reproduced here |
+|---|---|---|
+| **Non-intrusive SM** (§4.3, §6). OpenSBI needs only "3 lines of source code and 13 lines of build script changes". | `platform/qemu-virt/qemu.patch`, 17 non-blank added lines: 3 C lines in `sbi_hart.c` (`extern sm_init`; call `sm_init(next_addr, arg1)` instead of `mret`; `__builtin_unreachable()`), 13 build-system lines (`fw_base.S` `.incbin` of `sm.bin`, `fw_base.ldS` `.sm` section, `objects.mk` `SM_PATH`), and 1 extra debug `sbi_printf` in `sbi_hsm.c`. | ✅ The patch applies unchanged to the pinned OpenSBI. `sm_init` lands at `SM_TEXT_START`, and all 4 harts enter the SM. Step 5, G05 |
+| **Trap proxy** (§4.3.1): `mtvec` points to the SM, which forwards traps to the firmware's handler. | `crates/trap_proxy`; `init.rs` calls `TrapHandler::init_redirect(sbi_handler)`. | ✅ implicitly. Linux boots and uses SBI v2.0 (TIME, IPI, RFENCE, HSM, SRST, DBCN) through the proxy. Step 7, G07 |
+| **DPMP** (§4.1): PMP faults are handled in the SM, which installs PMP entries from the PMA table (NAPOT, merged into TOR when possible). | `sm.rs` `handle_pmp_fault()` handles Load/Store/Instruction access faults, computes the required PMAs (`pmas_on_paddr`, `pmas_req_vaddr`) and rewrites PMP (`update_pmp_by_pmas`, `calc_napot_area`, TOR flag). | ✅ in use: enclaves backed by non-contiguous 4 MiB blocks run correctly; the SM reports `pmp fault num` per enclave. The replacement and merge policy itself was not instrumented. Steps 10–11, G09–G10 |
+| **PMA memory model** (§4): every physical range has an owner and permissions; anything owned by `EVERYONE` is accessible to all entities. | `crates/pma`; `init_pma()` marks the OpenSBI region, the SM heap and the PMA table with `PmaProp::empty()`, i.e. owner `EVERYONE` with **no** permissions. | ⚠️ This interaction caused the hang in §6.1. Patch 0003 publishes those ranges as reserved memory. Step 12, G10–G11 |
+| **Enclave memory from the host OS, no pre-reserved region** (§7.2.1, §7.3). | `teectl` allocates through the Linux page allocator; `dmesg` shows `[teectl] 5120 pages needed` for a 20 MiB enclave. | ✅ Step 9, G09 |
+| **Edge calls / syscall proxy** through shared memory; proxied syscalls are not protected (§4.2.4). | The runtime proxies file I/O into a 16 KiB shared area; `client` executes it (`proxy_system_call`). | ✅ `write(2)` from the enclave appears on the host terminal; a micro-benchmark measures its cost. Steps 10–11 |
+| **Lazy page allocation** in the runtime (§6). | `crates/rt/src/trap.rs` handles load, store and instruction page faults. | Not measured separately. |
+| **Implementation language: Rust** (§6). | SM, runtime and client are Rust. | ✅ Built with the pinned `nightly-2024-11-27`. |
 
-2026-10-05 本次核对未能直接取得 GitHub 官方页面正文。可访问的[镜像](https://github-wiki-see.page/m/rivosinc/cove/wiki/CoVE-KVM-RISCV64-on-QEMU)标注页面最后修改于 2023-09-12。镜像是核对页面内容的辅助来源，不能证明官方页面当前内容没有变化。
+### 2.2 Paper features that differ from or are missing in the public code
 
-旧 Chat 已恢复本地 Wiki 仓库，并使用提交 `53484cd6e1753ca4f599734904a6629976559153` 的 `CoVE-KVM-RISCV64-on-QEMU.md` 作为 2023-03-07 时间锚。现有功能源码、历史参考输出和 9 月镜像不是同一版本组合。
+| Paper | Public code (`05664a2`) |
+|---|---|
+| **Decoupled enclave management** with a user-supplied EM in every enclave and an ecall API of `sm_new_enc`, `sm_init_enc`, `sm_regi_em`, `sm_move_mem`, `sm_check_mem`, `sm_resume_enc`, `sm_pause_enc`, `sm_rm_enc`, `sm_fini_enc`, `sm_fini_dpmp` (§4.2, Table 1). | Different API (`crates/sbi/src/ecall.rs`): `SbiSMCreateEnclave` (type User / Driver / Service), `Destroy`, `Run`, `Resume`, `Stop`, `Exit`, `Channel*`, `Copy*`, `CallPlugin`, … Enclave types are LSE / LUE / LDE. A LUE borrows the runtime and trampoline of the first LSE (`get_lse(0)`), and there is no EM. |
+| **Frontend–backend DPMP for virtual memory** (§4.1.3, Fig. 4): the EM walks the page tables and the SM only validates (`sm_fini_dpmp`). | The SM walks the enclave's Sv39/Sv48 page tables itself (`pmas_req_vaddr` in `sm.rs`). |
+| **Secure trap proxy** with ePMP, SallyPort/BaiLey trampolines and boot-time firmware binary check (§4.3.2). | No ePMP / Smepmp code, and no SP/BL trampolines. |
+| **Attestation**: the SM measures the EM, and the EM measures the rest (§4.2.2). | `measure_data()` computes an MD5 over the LUE binary. No attestation flow. |
+| (not in the paper) **Linux Driver Enclave** | `client --lde` sends enclave type 2, but `create_enclave()` accepts only 1 and 3 and otherwise calls `panic!` (G10 §1b). |
 
-| 项目 | 现有实验 | 9 月镜像所示 | 处理原则 |
-| --- | --- | --- | --- |
-| TVM 参数 | device authorization 参数；未显式选择 PCI transport | 无上述过滤参数；显式 PCI transport | 分别记录，不能静默混用 |
-| 内核版本 | 当前产物为 6.2.0 系列的功能快照 | 参考 TVM 输出为 6.3.0-rc4 系列 | 不声称逐版本相同；最终解释兼容性或调整源码组合 |
-| Salus 构建 | 冻结源码使用 Bazel | 参考日志含 Cargo 构建输出 | 按实际提交的构建系统运行 |
-| 仓库可用性 | QEMU 使用作者 fork 的保存分支 | 页面描述原 Rivos 仓库 | 写明替代来源及证据限度 |
+The public code was committed in May 2025, while the paper was published in
+December 2026. It therefore appears to implement an earlier design iteration
+than the one described in the paper. This reproduction exercises the public
+code as it is.
 
-镜像中的 TVM 启动命令（用于目标核对，**本轮不执行**）：
+### 2.3 Evaluation: paper vs. this reproduction
 
-```bash
-./lkvm-static run -c2 --console virtio --cove-vm -p "earlycon=sbi console=hvc1" -k ./Image --virtio-transport=pci
-```
+| | Paper (§7) | This reproduction |
+|---|---|---|
+| Platforms | VisionFive 2 (JH7110, 8 GB, **8 PMP**, Linux 6.6.20), BPI-F3 (SpacemiT K1, 4 GB, **32 PMP**, Linux 6.6.25); QEMU `virt` for the compatibility check; also ported to RustSBI | QEMU 8.2 `virt` only (TCG, **16 PMP**, 4 GiB, 4 harts), Linux 7.0.0-31, OpenSBI v1.5 |
+| Trap-proxy overhead | Boot: normal proxy no noticeable slowdown, secure proxy +43 %; ~200 instructions per proxied call | Not measured (TCG timing is not representative) |
+| Enclave operation cost (Table 4) | e.g. SM new enclave 20K cycles, stop/resume 6K, SM rm 37K, DPMP 5K–8K | Not measurable in cycles on TCG. Wall-clock equivalents are in §4 (end-to-end empty enclave 129.6 ms vs. 27.7 ms native) |
+| rv8, SQLite3, Llama2.c, FSCQ, darkhttpd | Overheads −0.5…1.6 % (rv8), 1.12…4.25 % (SQLite3), 0.23…1.22 % (Llama2.c); FSCQ write avg 12.9 %, read avg 23.6 %; darkhttpd ~3× lower throughput | **Not reproduced.** The workloads and harness are not in the public repository: the `tests` workspace member referenced by `Cargo.toml` is missing (patch 0001). |
+| Scalability | Up to 2048 concurrent enclaves (rv8-sha512); a 32 GB enclave on QEMU | 2 / 4 / 8 concurrent enclaves, all correct; enclave size 20 MiB |
+| Memory pressure | stress-ng 25/50/75 % has little effect on Lattice | Filling 85 % of RAM **hangs Linux** with the unpatched SM, because SM-private pages are not reserved (§6.1). Fixed by patch 0003. |
+| TCB (Table 2) | 27K LoC incl. OpenSBI; 4.5K with ePMP | Not measured |
 
-现有 S56R1 / H 的命令用于验证原崩溃及一行补丁的运行效果；它是调试实验。最终须有单独的 Wiki 参数对齐验证，不能把调试命令的结果直接命名为 Wiki 完整复现。
+---
 
-## 4. 当前基线和证据索引
+## 3. Pinned environment
 
-所有路径以项目根目录为起点。README 使用可移植路径，不写实际用户名或机器名。
+| Component | Version |
+|---|---|
+| Host | Ubuntu 24.04.5 LTS, x86-64 |
+| QEMU | 8.2.2 (Ubuntu package), machine `virt`, TCG |
+| Cross toolchain | `riscv64-linux-gnu-gcc` 13.3.0, binutils 2.42 |
+| Rust | `nightly-2024-11-27` (rustc 1.85.0-nightly `dff3e7ccd`), from upstream `rust-toolchain.toml` |
+| Lattice | `05664a26af63e0898828a37b4387efc188388dbf` (2025-05-26) |
+| OpenSBI | `ef4520b1c63fc2770b10d952a800f9734f861b0a` (v1.5-51, pinned by upstream `firmware.mk`) |
+| U-Boot | `v2024.10` (`f919c3a8`); not specified upstream |
+| Guest | Ubuntu 24.04.5 preinstalled server riscv64, kernel 7.0.0-31-generic |
 
-```bash
-cd "$HOME/Project/CoVE-2023-Source-Archaeology"
-export COVE_ROOT="$PWD"
-```
+---
 
-上述两行只用于设置每次命令所在目录；不是新的构建或启动步骤。
+## 4. Step-by-step build and run
 
-### 功能源码
+Run the commands in order. `REPRO` is the root of this repository;
+`sources/` and `work/` are created inside it and are git-ignored. The
+*Paper* note under each step says which part of the paper the step
+corresponds to.
 
-| 组件 | 项目内路径 | Git commit |
-| --- | --- | --- |
-| QEMU | `sources/qemu-cove-2023` | `73c0352f256c92dc775f863de38c49d1bc8d8cd0` |
-| Salus | `sources/salus-2023-history` | `9019fd815d4300bc3b558386389aff3ca91873e3` |
-| Linux | `sources/linux-cove-2023-functional` | `80ac7e01fcc43140c8ee846fe7829d17f7f30d5e` |
-| kvmtool parent | `sources/kvmtool-cove-2023-functional` | `02924a33ea56732fdce47d8a8673fb3c0752c425` |
-| Buildroot | `sources/buildroot-cove-2023` | `98843c2c71d14b38ee31b32875bb93eaa6a95f70` |
-| standalone DTC | `sources/dtc-cove-2023` | `72fc810c3025f07de718f5f32a290a6cd5d1f4ee` |
+### Step 0 — Host packages and the pinned Rust toolchain
 
-QEMU 来源为 `https://github.com/atishp04/qemu.git` 的历史分支。其他源码的获取、子模块恢复和独立快照选择由旧日志记录。仅凭同名分支不能证明它等同于原远端在某日的 tip。
-
-### 产物 SHA256
-
-| 产物 | SHA256 |
-| --- | --- |
-| `sources/qemu-cove-2023/build/qemu-system-riscv64` | `2a7ca2ec76a4668bcb9adc8e253a9921e92ed37e079774079b1a2b0113daa594` |
-| `runtime/COVE-S36/bazel-bin/salus` | `e90dace0419b66226736dcfea8c3f8e0e7a0b90ad986ef436501efd93e5b1f8d` |
-| `sources/linux-cove-2023-functional/build/arch/riscv/boot/Image` | `c0168f595132b7ba639bf30a692e58f4efae6ec4a490c94a868de8e84a3be95e` |
-| parent `lkvm-static` | `fb22cbba1e3bc5bc2eee6ad8f547b58c825eaf57c676634f9438a98bdc7b7a0c` |
-| 主 `rootfs.ext2` | `33ad84601683e74f43fe2c40cf61fee6409a1e38dc7fc64b8ef3ec10990a219c` |
-| `runtime/COVE-S56R2E/fdt-compatibility.patch` | `621b9601748965ec8b888a961bcb197accde0be242691761480a6c81afb01736` |
-| `runtime/COVE-S56R2E/lkvm-static.patched` | `4df5524ad41bf4ef9a567a42d04284886a25968734668eda9502c0c9bc952128` |
-
-这些是历史实测身份。换构建目录或依赖版本可能改变字节，不能用此表保证任意机器构建出相同哈希。
-
-### 关键历史记录
-
-| Step / Gate | 结论 | 对主线的含义 |
-| --- | --- | --- |
-| S36、S40R1、S43R1、S45、S46R3 | 核心产物构建通过 | 有可启动输入 |
-| S51R1A、S52R1 | rootfs 构建／注入的闭环审查通过 | 主 rootfs 已登记 |
-| S54R1、S55 | Host 集成启动与 KVM / CoVE 验证通过 | 可以尝试 TVM |
-| S56R1 | 原版实际执行，随后 buffer overflow 中止 | 未证明 TVM Linux 启动 |
-| S56R2E | 一行补丁、隔离构建和静态核对通过 | 运行效果仍未知 |
-| S56R2G1 | Host 恢复通过 | 只说明当时状态 |
-| S56R2H | BLOCKED，SSH banner 超时，退出 255 | 无补丁传输，无 TVM 执行 |
-
-H 的原始文件为 `COVE-S56R2H-Patched-FDT-One-TVM-20261005-150835.log`。G1 的原始文件为 `COVE-S56R2G1-Host-Recovery-20261002-222532-sk64Cd.log`。原日志在私人证据集合中保留；公开版索引应指向脱敏副本。
-
-## 5. 手动操作的日志模板
-
-以下是今后每个 Step 的记录方法。**它是交互式终端记录，不是执行一个命令脚本。** 每次只输入该 Step 的命令，完成后停止并上传日志。
-
-### 5.1 在 Ubuntu 外层终端开始记录
-
-`STEP` 必须使用当次给出的步骤名；下面的值是说明示例，不能拿来执行全部实验。
+*Paper:* §6 (implementation in Rust). Upstream pins `nightly-2024-11-27`
+with `riscv64imac-unknown-none-elf` (SM, runtime) and
+`riscv64gc-unknown-linux-gnu` (client).
 
 ```bash
-cd "$HOME/Project/CoVE-2023-Source-Archaeology"
-umask 077
-mkdir -p logs
-STEP=COVE-M01-Example
-LOG=$(mktemp "logs/${STEP}-$(date +%Y%m%d-%H%M%S)-XXXXXX.log")
-printf 'RAW_LOG=%s\n' "$LOG"
-SHELL=/bin/bash script -q -e -f "$LOG"
+sudo apt update
+sudo apt install -y build-essential git curl wget xz-utils python3 bc bison flex \
+  device-tree-compiler libssl-dev libgnutls28-dev python3-dev python3-setuptools swig \
+  gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu libc6-dev-riscv64-cross \
+  qemu-system-misc qemu-utils ipxe-qemu cloud-image-utils
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none
+. "$HOME/.cargo/env"
+rustup toolchain install nightly-2024-11-27 --profile minimal \
+  -c rust-src,rustfmt,clippy,llvm-tools-preview \
+  -t riscv64imac-unknown-none-elf,riscv64gc-unknown-linux-gnu
 ```
 
-`mktemp` 避免覆盖历史日志。最后一行打开一个被记录的交互 Bash；`script` 记录终端输出、命令回显和退出状态，不回放任何旧日志。不启用 `--log-in` 或 `--log-io`，避免记录隐式密码输入。
+`ipxe-qemu` provides `efi-virtio.rom`. Without it, QEMU refuses to create the
+`virtio-net-pci` device that the upstream `Makefile` uses.
 
-### 5.2 在被记录的终端中输入当次命令
+### Step 1 — Fetch and pin the sources
 
 ```bash
-export PS1='cove$ '
-set -o pipefail
-set -x
-date -Is
-pwd
-printf '%s\n' 'STEP=COVE-M01-Example' 'ACTION=READ_ONLY' 'SOURCE_CODE_INVOLVED=NO' 'REPO_METADATA_READ=NO'
+git clone https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git
+cd lattice-enclave-qemu-reproduction && export REPRO=$PWD
+mkdir -p sources work
+git clone https://github.com/LatticeEnclave/Lattice.git sources/Lattice
+git -C sources/Lattice checkout 05664a26af63e0898828a37b4387efc188388dbf
+git clone https://github.com/riscv-software-src/opensbi.git sources/opensbi
+git -C sources/opensbi checkout ef4520b1c63fc2770b10d952a800f9734f861b0a
+git clone --depth 1 --branch v2024.10 https://github.com/u-boot/u-boot.git sources/u-boot
 ```
 
-随后输入当次 Step 的实际命令。每个关键操作之后，立即输入以下两行，不能先执行其他命令覆盖 `$?`：
+### Step 2 — Working copy and the three reproduction patches
+
+The upstream tree does not build as published. These three patches are the
+only source changes made by this reproduction:
+
+| Patch | Change |
+|---|---|
+| 0001 | Removes the missing `tests` workspace member and excludes the unused `htee_*` crates, whose workspace dependency is undeclared. |
+| 0002 | Adds a `Cargo.lock` resolved for the pinned toolchain. |
+| 0003 | Reserves the SM heap and PMA table in the device tree (§6.1). |
 
 ```bash
-CMD_RC=$?
-printf 'COMMAND_EXIT_CODE=%s\n' "$CMD_RC"
+git clone sources/Lattice work/Lattice
+cd "$REPRO/work/Lattice"
+git checkout -b repro/qemu-virt 05664a26af63e0898828a37b4387efc188388dbf
+git -c user.name=lattice-repro -c user.email=repro@localhost am "$REPRO"/patches/lattice/*.patch
+git log --oneline -4
 ```
 
-若关键命令非零且不属于预先解释的结果，停止当前 Step，用以下命令关闭记录：
+### Step 3 — Toolchain prefix
+
+Upstream Makefiles and Cargo configs call `riscv64-unknown-linux-gnu-*`,
+while Ubuntu ships `riscv64-linux-gnu-*`. These project-local symlinks map
+one to the other; `env.sh` does the same.
 
 ```bash
-printf 'STEP_EXIT_CODE=%s\n' "$CMD_RC"
-exit "$CMD_RC"
+mkdir -p "$REPRO/tools/bin"
+for t in gcc g++ cpp ar as ld nm objcopy objdump ranlib readelf size strip; do
+  ln -sf "$(command -v riscv64-linux-gnu-$t)" "$REPRO/tools/bin/riscv64-unknown-linux-gnu-$t"
+done
+export PATH="$REPRO/tools/bin:$PATH" CROSS_COMPILE=riscv64-unknown-linux-gnu-
 ```
 
-通过时，先完成当前 Step 的规定验证，再记录 `STEP_EXIT_CODE=0` 并 `exit 0`。采集成功不等于被测对象健康，后者由日志审查另行判定。
+### Step 4 — Build the Secure Monitor
 
-回到外层终端后立刻记录返回值、日志身份和上传路径：
+*Paper:* §4 (SM), §4.1 (DPMP), §4.3 (non-intrusive SM). The SM is a
+stand-alone, position-dependent binary linked at `SM_TEXT_START`.
+`PMP_COUNT=16` matches QEMU `virt`; the paper's boards have 8 and 32.
 
 ```bash
-RECORDER_RC=$?
-printf 'RECORDER_EXIT_CODE=%s\n' "$RECORDER_RC"
-sha256sum "$LOG"
-printf 'UPLOAD_THIS_RAW_LOG=%s\n' "$LOG"
+cd "$REPRO/work/Lattice"
+rustc -V                               # 1.85.0-nightly (dff3e7ccd 2024-11-26)
+cargo fetch --locked
+B=$PWD/build/qemu-virt; P=$PWD/platform/qemu-virt; mkdir -p "$B"
+FW="SM_TEXT_START=0x8001e000 FW_TEXT_START=0x80000000 PMP_COUNT=16"
+make -f "$P/firmware.mk" build_path="$B" platform_path="$P" profile=release $FW sm
+riscv64-unknown-linux-gnu-readelf -h target/riscv64imac-unknown-none-elf/release/qemu-virt | grep Entry
+#   Entry point address: 0x8001e000
 ```
 
-权威日志内部已有命令／Step 状态，`script` 结束行也记录子 shell 状态。哈希用于识别上传原件。不能仅凭最后一次 `sha256sum` 成功判定整个实验通过。
+### Step 5 — OpenSBI with the embedded SM, and U-Boot
 
-### 5.3 源码追溯示例
+*Paper:* §4.3 and §6. This is the "non-intrusive" integration:
+`qemu.patch` only includes `sm.bin` as section `.sm` and calls `sm_init`
+instead of `mret` when OpenSBI hands off to S-mode.
 
-涉及 kvmtool FDT 时，除 Step 实际操作外记录：
+`firmware.mk` normally clones OpenSBI from the network, never fetches
+U-Boot, fails on a first build (an unguarded `rm -r`), and has no
+`sm → opensbi` ordering for `-j`. Therefore OpenSBI and U-Boot come from the
+pinned local sources, the directory is pre-created, and the top-level make
+runs without `-j`.
 
 ```bash
-git -C sources/kvmtool-cove-2023-functional rev-parse HEAD
-git -C sources/kvmtool-cove-2023-functional status --short --untracked-files=no
-git -C sources/kvmtool-cove-2023-functional show HEAD:riscv/fdt.c | nl -ba | sed -n '96,106p'
-printf '%s\n' 'SOURCE_PATH=riscv/fdt.c' 'SOURCE_SYMBOL=generate_cpu_nodes' 'SOURCE_LINES=96-106' 'SOURCE_ACTION=READ'
+git clone -q "$REPRO/sources/opensbi" "$B/opensbi"
+git -C "$B/opensbi" checkout -q ef4520b1c63fc2770b10d952a800f9734f861b0a
+git -C "$B/opensbi" apply "$P/qemu.patch"
+mkdir -p "$B/opensbi/build/platform/generic/firmware"
+git clone -q "$REPRO/sources/u-boot" "$B/u-boot"
+make -C "$B/u-boot" CROSS_COMPILE=riscv64-unknown-linux-gnu- qemu-riscv64_smode_defconfig
+make -C "$B/u-boot" -j"$(nproc)" CROSS_COMPILE=riscv64-unknown-linux-gnu-
+make -f "$P/firmware.mk" build_path="$B" platform_path="$P" profile=release $FW firmware
 ```
 
-使用相应仓库的实际路径和 commit；补丁 worktree 的读取／修改另行记录，不把 parent HEAD 当作工作树未经修改的证明。
-
-## 6. 已验证历史步骤的命令目录
-
-本节把旧日志中的核心操作写成可读的 commandline，供解释实现和编写最终手册。**本轮不运行，也不能整节连续执行。** 当前产物已经存在，重复配置／构建可能改变证据；未来重建必须使用经过检查的新目录。
-
-各条命令的完整构建输出由历史日志支持。以下命令目录没有列齐所有历史依赖获取步骤，不能作为未经补全的全新机器安装方案。执行任一重建 Step 时，仍须使用第 5 节的单步记录方式。
-
-### 6.1 QEMU 构建
-
-来源：S40R1。涉及 QEMU `util/async.c`、`include/qemu/queue.h` 及构建系统；构建读取源码，未修补冻结 tracked source。GCC 13 兼容调整针对生成的 Meson 构建配置。
+OpenSBI places `.sm` directly after its own `.text`. Because the SM is linked
+at a fixed address, check that both agree:
 
 ```bash
-meson configure "$COVE_ROOT/sources/qemu-cove-2023/build" -Dc_args=-Wno-error=dangling-pointer
-cd "$COVE_ROOT/sources/qemu-cove-2023/build"
-make -j2
+riscv64-unknown-linux-gnu-nm "$B/opensbi/build/platform/generic/firmware/fw_payload.elf" | grep -w sm_init
+#   000000008001e000 T sm_init
 ```
 
-前置条件是 S39 / S40 已完成 riscv64-softmmu 配置和子模块准备。第一行与第三行分别是配置调整、构建操作，按新规范重做时各自记录 Step。该设置只降低指定警告的错误等级，不能隐藏其他构建错误。
-
-### 6.2 Linux 配置、授权数据和 Image
-
-来源：S42R4、S43R1。仓库为功能快照。涉及 `arch/riscv/Kconfig`、`arch/riscv/cove/`、`arch/riscv/kvm/cove.c`、`drivers/tty/hvc/hvc_riscv_sbi.c`、`tools/device-authorize/build-firmware.py` 和对应输入 JSON。源码 READ / BUILD，生成配置和固件数据。
-
-在新的、已审查的构建环境中，基础配置操作为：
+Firmware-only smoke test (stops after 30 s). Expected output: the OpenSBI
+banner, `hart 1 started`, then `U-Boot 2024.10`.
 
 ```bash
-cd "$COVE_ROOT/sources/linux-cove-2023-functional"
-export ARCH=riscv
-export CROSS_COMPILE=riscv64-linux-gnu-
-make O=./build defconfig
-scripts/config --file build/.config --enable CONFIG_RISCV_COVE_HOST
-scripts/config --file build/.config --enable CONFIG_RISCV_COVE_GUEST
-scripts/config --file build/.config --enable CONFIG_RISCV_SBI_V01
-scripts/config --file build/.config --enable CONFIG_KVM
-scripts/config --file build/.config --enable CONFIG_HVC_RISCV_SBI
-scripts/config --file build/.config --enable CONFIG_FW_LOADER
+timeout 30 qemu-system-riscv64 -machine virt -nographic -m 4096M -smp 4 -nic none -bios "$B/fw_payload.bin"
 ```
 
-历史授权数据生成操作为独立 Step：
+### Step 6 — Guest root filesystem
+
+*Paper:* §7 uses vendor Linux 6.6 on real boards. Here Ubuntu 24.04 is used,
+because Lattice builds its kernel module *inside* the guest against
+`/lib/modules/$(uname -r)/build`, and 24.04 does not require RVA23 (which
+QEMU 8.2 cannot emulate).
 
 ```bash
-cd "$COVE_ROOT/sources/linux-cove-2023-functional/tools/device-authorize"
-python3 build-firmware.py --input riscv-cove.json --output riscv-cove.bin
-sha256sum riscv-cove.json riscv-cove.bin
+mkdir -p "$REPRO/work/images" "$REPRO/work/guest" && cd "$REPRO/work/images"
+U=https://cdimage.ubuntu.com/releases/noble/release
+wget -q $U/SHA256SUMS $U/SHA256SUMS.gpg $U/ubuntu-24.04.5-preinstalled-server-riscv64.img.xz
+gpgv --keyring /usr/share/keyrings/ubuntu-archive-keyring.gpg SHA256SUMS.gpg SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+xz -dk -T0 -c ubuntu-24.04.5-preinstalled-server-riscv64.img.xz > rootfs.img
+qemu-img resize -f raw rootfs.img 32G
+ssh-keygen -q -t ed25519 -N "" -C lattice-repro-guest -f ../guest/id_ed25519
+cat > ../guest/user-data <<EOF
+#cloud-config
+hostname: lattice-guest
+users:
+  - name: ubuntu
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - $(cat ../guest/id_ed25519.pub)
+package_update: true
+packages: [build-essential, git]
+runcmd:
+  - [ sh, -c, "apt-get install -y linux-headers-\$(uname -r)" ]
+final_message: "LATTICE_CLOUD_INIT_DONE"
+EOF
+printf 'instance-id: lattice-guest-001\nlocal-hostname: lattice-guest\n' > ../guest/meta-data
+cloud-localds seed.img ../guest/user-data ../guest/meta-data
 ```
 
-随后登记内置固件路径；下面使用可移植变量表达同一设置：
+### Step 7 — Boot Linux on the Lattice firmware
+
+*Paper:* §4.3.1 (trap proxy). Every SBI call that Linux makes passes through
+the SM's trap handler into OpenSBI. The machine configuration matches the
+upstream `Makefile` `qemu` target (`virt`, 4 GiB, 4 harts, raw virtio disk,
+`virtio-net-pci`), plus an SSH port forward and the cloud-init seed.
 
 ```bash
-cd "$COVE_ROOT/sources/linux-cove-2023-functional"
-scripts/config --file build/.config --set-val CONFIG_EXTRA_FIRMWARE '"riscv-cove.bin"'
-scripts/config --file build/.config --set-val CONFIG_EXTRA_FIRMWARE_DIR "\"$COVE_ROOT/sources/linux-cove-2023-functional/tools/device-authorize/\""
+cd "$REPRO/work"
+qemu-system-riscv64 -machine virt -m 4096M -smp 4 \
+  -bios Lattice/build/qemu-virt/fw_payload.bin \
+  -drive file=images/rootfs.img,format=raw,if=virtio \
+  -drive file=images/seed.img,format=raw,if=virtio,readonly=on \
+  -netdev user,id=net0,hostfwd=tcp:127.0.0.1:10022-:22 -device virtio-net-pci,netdev=net0 \
+  -nographic
 ```
 
-实际 Image 构建为独立 Step：
+In a second terminal (the first boot, including cloud-init, takes about 3 minutes):
 
 ```bash
-cd "$COVE_ROOT/sources/linux-cove-2023-functional"
-export ARCH=riscv
-export CROSS_COMPILE=riscv64-linux-gnu-
-make O=./build -j2
+export REPRO=/path/to/lattice-enclave-qemu-reproduction
+SSH="ssh -i $REPRO/work/guest/id_ed25519 -p 10022 -o StrictHostKeyChecking=accept-new ubuntu@127.0.0.1"
+$SSH 'cloud-init status --wait; uname -r; nproc; sudo dmesg | grep -E "SBI specification|smp: Brought up|reserved mem"'
+#   7.0.0-31-generic / 4 / SBI specification v2.0 detected / smp: Brought up 1 node, 4 CPUs
+#   OF: reserved mem: 0x0000000080080000..0x00000000800effff (448 KiB) ... mmode_resv0@80080000   <- patch 0003
 ```
 
-当前功能快照含授权数据路径；最终采用 Wiki 另一参数／源码组合时必须重新审查这些配置，不能默认为可直接删除或互换。
+### Step 8 — Build the runtime (ERT), the client (UAPP) and a payload (EAPP)
 
-### 6.3 DTC / libfdt 与 kvmtool
-
-来源：S45、S46R3。交叉工具链为 `riscv64-linux-gnu-`；历史版本是 GCC 13.3.0、Binutils 2.42。DTC 的 `libfdt/` 是构建输入；隔离安装不写 Ubuntu 系统 `/usr`。
+*Paper:* §4 (ERT/EAPP), §6 (runtime in Rust).
 
 ```bash
-cd "$COVE_ROOT/sources/dtc-cove-2023"
-export ARCH=riscv
-export CROSS_COMPILE=riscv64-linux-gnu-
-export CC="${CROSS_COMPILE}gcc -mabi=lp64d -march=rv64gc"
-TRIPLET=$(${CROSS_COMPILE}gcc -dumpmachine)
-make NO_PYTHON=1 NO_YAML=1 DESTDIR="$COVE_ROOT/artifacts/dtc-cove-2023-riscv64-root" PREFIX=/usr LIBDIR="/usr/lib/$TRIPLET" install-lib install-includes
+cd "$REPRO/work/Lattice"
+make -C runtime build                              # ERT  -> runtime.bin (used as fw-rt.bin)
+(cd crates/client && cargo build --release --locked)          # UAPP
+(cd crates/test_launcher && cargo build --release --locked)   # parallel launcher
+riscv64-unknown-linux-gnu-gcc -static -O2 -o "$REPRO/work/hello" "$REPRO/tests/enclave/hello.c"   # EAPP
+S="$REPRO/work/stage/lattice"; mkdir -p "$S/tee_mod"
+cp target/riscv64gc-unknown-linux-gnu/release/client target/riscv64gc-unknown-linux-gnu/release/test_launcher "$S/"
+cp target/riscv64imac-unknown-none-elf/release/runtime.bin "$S/fw-rt.bin"
+cp "$REPRO/work/hello" "$S/"
+cp linux/modules/tee_mod/main.c linux/modules/tee_mod/Makefile "$S/tee_mod/"
+sed 's#"./testcode"#"./hello"#' crates/client/example.toml > "$S/config.toml"
 ```
 
-kvmtool 的静态构建为另一个 Step：
+### Step 9 — Host memory provider (`teectl`) in the guest
+
+*Paper:* §7.2.1 / §7.3. Enclave memory comes from the OS allocator
+(`GFP_HIGHUSER`, at most 2^MAX_ORDER pages per block), with no pre-reserved
+region.
 
 ```bash
-cd "$COVE_ROOT/sources/kvmtool-cove-2023-functional"
-export ARCH=riscv
-export CROSS_COMPILE=riscv64-linux-gnu-
-make lkvm-static -j2 LIBFDT_DIR="$COVE_ROOT/sources/dtc-cove-2023/libfdt"
+tar -C "$S" -cf - . | $SSH 'rm -rf ~/lattice && mkdir -p ~/lattice && tar -C ~/lattice -xf -'
+$SSH 'cd ~/lattice/tee_mod && make build && sudo insmod teectl.ko && ls -l /dev/teectl'
 ```
 
-仓库相对路径至少包括 `Makefile`、`riscv/fdt.c`、`riscv/kvm.c`、`riscv/aia.c`、`include/linux/kvm.h` 和 `riscv/include/kvm/kvm-config-arch.h`。最终手册须继续保留实际配置／静态链接核对；不额外执行未经登记的 strip 操作。
+`teectl` has no `module_exit`, so it cannot be unloaded; load it again after every boot.
 
-### 6.4 FDT 最小修补
+### Step 10 — Enclave lifecycle: service enclave first, then user enclave
 
-来源：S56R2E。修改只位于隔离 worktree 的 `riscv/fdt.c`，`generate_cpu_nodes()` 第 103 行附近。parent 不改动。
-
-```diff
--pos += snprintf(cpu_isa + pos, CPU_ISA_MAX_LEN, "_%s",
-+pos += snprintf(cpu_isa + pos, CPU_ISA_MAX_LEN - pos, "_%s",
-```
-
-上面的两行是解释性 diff，**不是可以直接交给 `git apply` 的完整补丁**。完整补丁在 `runtime/COVE-S56R2E/fdt-compatibility.patch`，哈希见第 4 节。
-
-查看已完成修补的手动命令为：
+*Paper:* §4.2.2 (lifecycle) and §4.2.4 (edge calls). In the public code,
+`create_lue()` maps the runtime and trampoline of an existing **LSE** into
+every new **LUE** (§2.2). Without an LSE, the SM panics
+(`sm.rs:211 get_lse(0).unwrap()`) and the machine locks up (G09). The LSE
+holder process must keep running, because it owns the LSE memory. Use the
+long options, since `-l` is bound to both `--lse` and `--lde`.
 
 ```bash
-git -C "$COVE_ROOT/runtime/COVE-S56R2E/kvmtool-patched" rev-parse HEAD
-git -C "$COVE_ROOT/runtime/COVE-S56R2E/kvmtool-patched" --no-pager diff -- riscv/fdt.c
-sha256sum "$COVE_ROOT/runtime/COVE-S56R2E/fdt-compatibility.patch"
-sha256sum "$COVE_ROOT/runtime/COVE-S56R2E/lkvm-static.patched"
+$SSH 'cd ~/lattice && sudo sh -c "nohup ./client --lse -c config.toml > lse.out 2>&1 < /dev/null &"; sleep 5; tail -2 lse.out'
+#   lse created
+#   eidx: 0x2
+$SSH 'cd ~/lattice && sudo ./client -c config.toml ./hello'
+#   create enclave
+#   lue created
+#   LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy      <- edge call (proxied write)
+#   LATTICE_ENCLAVE_SUM=499999500000
+#   enclave finished
 ```
 
-补丁构建历史命令为：
+The SM prints to the QEMU console, for example:
+`[INFO] pmp fault num: 0` … `[INFO] Cleaning enclave 3` … `[INFO] [SM] Enclave 3 cleaned`.
+
+### Step 11 — Evaluation
+
+*Paper:* §7.2 (micro-benchmarks, Table 4) and Fig. 10 (parallel enclaves).
+Concurrent enclaves (8 enclaves on 4 harts):
 
 ```bash
-cd "$COVE_ROOT/runtime/COVE-S56R2E/kvmtool-patched"
-export ARCH=riscv
-export CROSS_COMPILE=riscv64-linux-gnu-
-make lkvm-static -j2 LIBFDT_DIR="$COVE_ROOT/sources/dtc-cove-2023/libfdt"
+$SSH 'cd ~/lattice && sudo ./test_launcher "./client -c config.toml ./hello" 8 | grep -c "enclave finished"'
+#   8
 ```
 
-修补意图是让输出地址与剩余容量一致。S56R2E 已有构建与反汇编核对；H 没有执行该产物，因此运行效果没有结论。
+Micro-benchmarks:
 
-### 6.5 Salus
-
-来源：S36。源码追溯为 `WORKSPACE`、`BUILD`、`.bazelrc`、`bazel/workspace_status_command.sh` 和登记的依赖提交。使用 Bazel 6.0.0、RISC-V target platform 与 nightly Rust。
-
-核心构建命令为：
+- `tests/enclave/empty.c`: enclave create, launch and teardown cost.
+- `tests/enclave/bench.c`: `getpid` (served by the runtime), proxied `write(/dev/null)` (edge call), and a compute loop.
 
 ```bash
-cd "$COVE_ROOT/sources/salus-2023-history"
-"$COVE_ROOT/dependencies/tools/bazel-6.0.0-linux-x86_64" \
-  --output_user_root="$COVE_ROOT/runtime/COVE-S36/output-user-root" \
-  --batch build --announce_rc \
-  --repository_cache="$COVE_ROOT/runtime/COVE-S36/repository-cache" \
-  --symlink_prefix="$COVE_ROOT/runtime/COVE-S36/bazel-" \
-  --jobs=2 --verbose_failures \
-  --platforms=@rules_rivos//platforms:riscv64-none \
-  --@rules_rust//rust/toolchain/channel=nightly //:salus-all
+riscv64-unknown-linux-gnu-gcc -static -O2 -o "$S/empty" "$REPRO/tests/enclave/empty.c"
+riscv64-unknown-linux-gnu-gcc -static -O2 -o "$S/bench" "$REPRO/tests/enclave/bench.c"
+scp -i "$REPRO/work/guest/id_ed25519" -P 10022 "$S/empty" "$S/bench" ubuntu@127.0.0.1:lattice/
+$SSH 'cd ~/lattice && ./bench && sudo ./client -c config.toml ./bench | grep BENCH'
+$SSH 'cd ~/lattice && sudo bash -c "for i in 1 2 3 4 5; do s=\$(date +%s%N); ./client -c config.toml ./empty >/dev/null; e=\$(date +%s%N); echo \$(( (e-s)/1000000 )) ms; done"'
 ```
 
-历史执行另外隔离了 home、临时目录和缓存目录。上面只提取核心构建命令，**不是历史完整环境的逐字重演**。最终新目录操作必须显式登记所用目录和已恢复的规则／工具链缓存；不能复用现有证据路径来冒充新实验。
+### Step 12 — Memory pressure next to the SM (patch 0003)
 
-### 6.6 Buildroot 和 Host rootfs
-
-来源：S48、S50R3B、S51R1A、S52R1。配置入口为 `configs/qemu_riscv64_virt_min_defconfig`；工具链兼容处理涉及 `package/gcc/gcc.mk` 及生成的 host-gcc-initial 构建状态。
-
-历史配置命令：
+*Paper:* §4 (PMA model) and §7.2.2 (high system load).
 
 ```bash
-cd "$COVE_ROOT/sources/buildroot-cove-2023"
-make qemu_riscv64_virt_min_defconfig
+riscv64-unknown-linux-gnu-gcc -static -O2 -o "$S/memfill" "$REPRO/tests/tools/memfill.c"
+scp -i "$REPRO/work/guest/id_ed25519" -P 10022 "$S/memfill" ubuntu@127.0.0.1:lattice/
+$SSH 'cd ~/lattice && ./memfill $(awk "/MemAvailable/ {printf \"%d\", \$2/1024*0.85}" /proc/meminfo)'
+#   with 0003:    MEMFILL_OK ...
+#   without 0003: the guest hangs (all harts spin on store access faults, mcause=7)
 ```
 
-既有失败构建的兼容修复操作为：
+To see the original bug, rebuild the firmware without 0003
+(`git -C "$REPRO/work/Lattice" checkout HEAD~1`, then Steps 4–5) and repeat
+this step.
 
-```bash
-make -j2 host-gcc-initial-reconfigure HOST_GCC_COMMON_MAKE_OPTS="gcc_cv_libc_provides_ssp=yes gcc_cv_prog_makeinfo_modern=no"
+---
+
+## 5. Results (QEMU TCG — only the ratios are meaningful)
+
+| Metric (median) | Native | LUE | Ratio |
+|---|---:|---:|---:|
+| End-to-end run of an empty program (create + launch + teardown) | 27.7 ms | 129.6 ms | 4.7× |
+| `getpid` (served inside the runtime) | 518 ns | 7.69 µs | 15× |
+| `write(/dev/null)` (edge call: enclave → SM → client → Linux) | 757 ns | 298.7 µs | ≈395× |
+| Compute loop, 5·10⁷ iterations | 68.4 ms | 75.9 ms | 1.11× |
+| Parallel LUEs (2 / 4 / 8) | — | all correct | — |
+
+Raw samples: `logs/G10_eval_20261028T061245Z_results.csv`.
+
+These numbers come from a different platform (TCG emulation) than the
+paper's hardware cycle counts (Table 4) and benchmarks (§7.2), so they are
+not directly comparable. They agree with the paper qualitatively: compute
+inside an enclave runs close to native speed, while edge calls dominate the
+overhead of I/O-heavy work (§7.2.2: FSCQ, darkhttpd).
+
+---
+
+## 6. Upstream issues found
+
+### 6.1 SM-private memory is not reserved, so Linux hangs (fixed by patch 0003)
+
+- **Layout**: `platform.rs` places the SM heap (64 KiB) and the PMA table (256 KiB) directly after OpenSBI, at `0x800a0000–0x800f0000` on `virt`.
+- **Protection**: `init_pma()` gives both regions the PMA property `empty()`, which means owner `EVERYONE` with no permissions.
+- **Missing step**: the step that should publish these ranges to the next stage ("update the reserved memory area" in `init.rs`) is commented out. Linux therefore treats the pages as free RAM.
+- **Failure**: when Linux allocates one of these pages (under memory pressure, or during shutdown), the store faults. `handle_pmp_fault()` finds owner `EVERYONE`, installs an entry with *no* permission, and resumes, so the store faults again, forever. All harts end up spinning at the same kernel PC with `mcause=7`, and nothing is printed on the console (`logs/G10_*_cpu_state.log`).
+- **Fix**: patch 0003 extends OpenSBI's `/reserved-memory` node to cover the SM heap and PMA table, using the existing helper `update_reserved_mem_region_size()`. With the fix, the G10 experiment passes and graceful shutdown works (G11).
+
+### 6.2 Other issues
+
+1. **An LSE must exist before any LUE.** This is undocumented; otherwise the SM panics (G09).
+2. **LDE is not handled by the SM** (`panic!("unknown enclave type")`).
+3. **The workspace does not load as published** (patch 0001), and no `Cargo.lock` is shipped (patch 0002).
+4. **`firmware.mk`**: fails on a first build, is unsafe with `-j`, and never fetches U-Boot.
+5. **`teectl`**: has no `module_exit`, and `alloc_blocks()` reads an uninitialised `page` when `order == 0`.
+6. **`client` CLI**: `-l` is bound to both `--lse` and `--lde`.
+
+---
+
+## 7. Repository layout
+
+```
+patches/lattice/  0001-0003 (the only changes to upstream)
+tests/            enclave payloads (hello, empty, bench) and tools (memfill, pagemap)
+scripts/          G01-G13 gate scripts: an automated version of Section 4, with checks
+logs/             all gate logs (sanitized), GATE_LEDGER.md, results CSV
+docs/REPORT.md    detailed reproduction report
+env.sh, fw_params.env, SOURCES_PINNED.txt
 ```
 
-这条命令适用于当时已生成的失败状态，不是全新 Buildroot 安装的通用第一步。全量 rootfs 的成功构建由闭环审查支持；缺少独立上传的完整 S51 大日志，最终证据包需要明确这个历史缺口。
+## 8. Limitations
 
-主 rootfs 已包含 `/root/Image` 与 parent `/root/lkvm-static`。新启动使用主 rootfs 的副本；不得对主镜像重复注入补丁版产物。最终手册需以新的日志补齐手动复制、挂载／卸载和 SHA256 核对过程。
+- QEMU TCG only: no cycle-accurate numbers, and no real-hardware PMP counts (8 or 32).
+- The paper's workloads (rv8, SQLite3, Llama2.c, FSCQ, darkhttpd, 2048 enclaves) are not in the public repository, so they were not re-run.
+- The public code predates the paper and lacks the EM-based API, the secure trap proxy and LDE support (§2.2).
 
-## 7. 当前断点及下一步的范围
+## 9. License / attribution
 
-最近已审查的 H 结果是 SSH banner 超时、退出码 255。原 QEMU 身份和源码／主 rootfs 检查通过；H 未传输补丁，也未运行 TVM。这是 BLOCKED，不是补丁运行失败。
-
-当前未有 H-A1 返回日志。此前提供的 `run-COVE-S56R2H-A1.sh` 从本版起停止作为下一步执行接口使用；保留文件和历史记录，不删除或改写。
-
-下一现场 Step 的目的只有一个：**判断现有 Host 是否适合承载 TVM 实验，选择继续使用还是恢复 Host。** 它将改成逐条输入的只读命令，观察 PID 身份、线程状态、两次 CPU 时间和控制台／连接状态。该 Step 不同时传输补丁或启动 TVM。
-
-然后依据返回日志给出下一 Step。后续主线是：
-
-| 顺序 | 单一目的 | 本轮是否下发执行 |
-| --- | --- | --- |
-| 下一 Step | 决定当前 Host 的使用／恢复方式 | 否；本轮先调整方法和文档 |
-| 后续 | 核对并暂存补丁版产物 | 否 |
-| 后续 | 实际执行一次补丁版 TVM，审查原崩溃是否消失 | 否 |
-| 后续 | 核对 Wiki 目标参数与源码支持，执行目标组合 | 否 |
-| 后续 | 补齐 TVM 用户态、网络、中断与重复执行证据 | 否 |
-| 收尾 | 制作脱敏公开集合并完成 README | 否 |
-
-这张表说明方向，不授权把多个实验连续执行。若某阶段需要修补，先以具体失败日志定位源码，再单独记录修改与构建。
-
-## 8. GitHub 发布与脱敏
-
-### 8.1 保留证据，另建公开副本
-
-原始日志始终是本地审查的权威资料。公开日志是明确标注的脱敏派生文件。只保留公开日志会失去原始证据；直接把原件推送到公开仓库则不满足本项目发布要求。
-
-| 文件类型 | 私人保留 | GitHub 发布原则 |
-| --- | --- | --- |
-| 原始 logs、完整 transcript、HAR | 是 | 不直接发布 |
-| 脱敏后的逐 Step 日志 | 原件和副本均留 | 逐文件审查后发布 |
-| README、公开版本清单、最小补丁 | 是 | 检查无身份／凭据后发布 |
-| 私钥、askpass、认证文件、主机指纹记录 | 按需私人保留 | 不发布 |
-| rootfs、运行磁盘、内存 dump | 按需私人保留 | 不纳入默认公开仓库 |
-| 构建缓存、完整外部源码副本 | 按需私人保留 | 使用来源／commit 说明替代；依许可单独处理 |
-
-脱敏范围包括真实用户名、主机名、home 绝对路径、私人邮箱、私人 IP／域名、远端凭据、token、session cookie、SSH key 和签名下载 URL。路径用一致的 `$COVE_ROOT` / `<USER_HOME>` 等标识替换，并说明真实执行时展开为本地路径。
-
-**保留**复现所需的 commandline 结构、仓库相对路径、公开 commit、补丁、编译选项、stdout/stderr 的技术内容、退出码、版本、产物哈希和事件顺序。不为了好看而删除失败、警告或关键时间关系。IP 等值若影响网络拓扑，保留角色和对应关系，注明替换。
-
-### 8.2 发布文件集合
-
-| 路径 | 内容 |
-| --- | --- |
-| `README.md` | 手动流程、环境、验收结果、限制和证据链接 |
-| `patches/` | 实际完整 diff；原提交和修改原因 |
-| `evidence/public/` | 已脱敏并复核的逐 Step `.log` |
-| `docs/evidence-index.md` | Step → 命令 → 结果 → 脱敏日志 → 产物哈希 |
-| `docs/versions.md` | 仓库来源、commit、工具链、配置和 Wiki 版本 |
-| `docs/redaction.md` | 脱敏类别、规则和核对结果；不写真实敏感值 |
-
-以上是最终目录约定；本次只创建 README 工作版，其余文件尚未完成。
-
-发布仓库应拒绝加入 `logs/`、`runtime/`、`sources/`、`dependencies/`、原始聊天导出、认证材料和磁盘镜像。采用明确文件清单暂存，不使用 `git add .` 将整个实验目录纳入仓库。`.gitignore` 不是秘密检查的替代品；已经跟踪的文件仍需审查。
-
-### 8.3 发布审查的手动命令示例
-
-在独立公开仓库中操作；这是待实施的发布检查目录，不是本轮实验步骤：
-
-```bash
-git status --short
-git diff --cached --name-only
-git diff --cached --stat
-git --no-pager diff --cached
-```
-
-对公开候选文件做敏感模式预筛选，使用 `-l` 只显示文件名，避免把命中的秘密再次打印进日志：
-
-```bash
-rg -l -i 'BEGIN .*PRIVATE KEY|authorization:|bearer[[:space:]]|access[_-]?token|api[_-]?key|password[[:space:]]*=|cookie:|X-Amz-Signature|[?&]sig=' README.md docs patches evidence/public
-rg -l '/home/[^/[:space:]]+|/Users/[^/[:space:]]+' README.md docs patches evidence/public
-```
-
-`rg` 返回 1 只说明本次模式没有匹配；不能证明不存在所有敏感信息。命中项需要区分公开教程示例与真实凭据，并逐文件人工复核。公开仓库的历史、压缩附件和候选文件列表也要核对。实际 GitHub 上传在公开文件集合完成审查后另行执行；本轮未创建或推送 GitHub 仓库。
-
-## 9. README 完成前的缺口
-
-- 冻结本次最终对齐的官方 Wiki 修订内容或明确标注可取得的历史版本；记录其目标输出和与当前源码的差异。
-- 将旧日志里的源码获取／子模块／依赖恢复命令补齐为手动步骤，给出每个实际可取得来源与 commit。
-- 完整登记工具链、Bazel / Rust / 历史规则缓存及 Host 软件依赖；不能把当前机器已经有的环境当作读者默认条件。
-- 补齐全新目录的 Buildroot 构建、rootfs 注入、运行副本和 Host 启动流程，避免复用旧证据目录。
-- 真正执行补丁版 TVM，并补齐 Wiki 参数对齐、两颗 CPU、用户态 shell、网络和中断结果。
-- 制作公开日志副本和索引，完成脱敏核对；由逐 Step 原始日志支撑结论。
-- 在独立新目录按 README 再执行一遍；每 Step 一份日志，证明手册本身能复现。
-
-## 10. 资料来源
-
-1. [官方任务页面](https://github.com/rivosinc/cove/wiki/CoVE-KVM-RISCV64-on-QEMU)。
-2. [2023-09-12 版本内容镜像](https://github-wiki-see.page/m/rivosinc/cove/wiki/CoVE-KVM-RISCV64-on-QEMU)，本次用于目标输出和参数差异核对。
-3. 本地 Wiki 历史提交 `53484cd6e1753ca4f599734904a6629976559153`，文件 `CoVE-KVM-RISCV64-on-QEMU.md`。
-4. 旧 Chat 原始 TXT / HAR 和 `CoVE-Full-Context-Reconstruction-20261002.txt`：用于上下文恢复；具体实验结论优先依据对应原始 `.log`。
-5. S36、S40R1、S42R4、S43R1、S45、S46R3、S48、S50R3B、S51R1A、S52R1、S54R1、S55、S56R1、S56R2E 及最新 G1 / H 原始日志。
-
-本次只编辑文档并核对已有资料，没有连接用户实验主机，也没有执行 README 中的构建、诊断或 TVM 命令。
+The scripts, tests and documentation in this repository are original work.
+The paper is published under CC BY 4.0 and is cited, not copied. Lattice,
+OpenSBI and U-Boot are fetched from their upstream repositories under their
+own licenses and are not redistributed here; `patches/` contains diffs
+against them.
