@@ -23,3 +23,7 @@ record whether the current work still serves the main task.
 | G11 | Fix: reserve SM heap+PMA in DT (patch 0003) + re-test | 20261028T071845Z | FAIL=0 WARN=0 | G11_fix_20261028T071845Z.log | - |
 | G12 | Sanitization audit + local commit | 20261028T072659Z | FAIL=1 WARN=0 | G12_publish_audit_20261028T072659Z.log | - |
 | G12 | Sanitization audit + local commit | 20261028T073735Z | FAIL=0 WARN=0 | G12_publish_audit_20261028T073735Z.log | - |
+| G13 | Push to GitHub + verify published content | 20261028T075105Z | FAIL=1 WARN=1 | G13_push_verify_20261028T075105Z.log | - |
+| G13 | Push to GitHub + verify published content | 20261028T075436Z | FAIL=1 WARN=1 | G13_push_verify_20261028T075436Z.log | - |
+| G13 | Push to GitHub + verify published content | 20261028T075629Z | FAIL=1 WARN=1 | G13_push_verify_20261028T075629Z.log | - |
+| G13 | Push to GitHub + verify published content | 20261028T080050Z | FAIL=0 WARN=1 | G13_push_verify_20261028T080050Z.log | - |

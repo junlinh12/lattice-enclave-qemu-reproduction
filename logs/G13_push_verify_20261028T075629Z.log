@@ -1,0 +1,38 @@
+
+==================== META ====================
+gate=G13 (v1) timestamp_utc=20261028T075629Z target=junlinh12/lattice-enclave-qemu-reproduction
+
+==================== 1. Commit identities ====================
+
+$ git log --format='%h %an <%ae> | %cn <%ce> | %ad' --date=iso-strict
+43b7574 junlinh12 <<EMAIL>> | junlinh12 <<EMAIL>> | 2026-10-28T07:37:36+00:00
+(exit=0)
+
+$ git status --short
+ M logs/GATE_LEDGER.md
+?? logs/G13_push_verify_20261028T075105Z.log
+?? logs/G13_push_verify_20261028T075436Z.log
+?? logs/G13_push_verify_20261028T075629Z.log
+?? scripts/G13_push_and_verify.sh
+(exit=0)
+
+==================== 2. Remote + push ====================
+
+$ git remote -v
+origin	https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git (fetch)
+origin	https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git (push)
+(exit=0)
+
+$ git push -u origin main
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https://github.com/junlinh12/lattice-enclave-qemu-reproduction.git/'
+(exit=128)
+
+==================== SUMMARY ====================
+[PASS] all author/committer e-mails are GitHub noreply
+[PASS] all commit dates in UTC
+[WARN] uncommitted changes (only committed content is pushed)
+[PASS] origin points to junlinh12/lattice-enclave-qemu-reproduction
+[FAIL] git push failed (auth? repo not created? e-mail blocked?)
+
+RESULT: FAIL=1 WARN=1
