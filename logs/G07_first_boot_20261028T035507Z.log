@@ -1,0 +1,51 @@
+
+==================== META ====================
+gate=G07 timestamp_utc=20261028T035507Z timeout=7200s
+
+==================== 1. Pre-flight ====================
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_payload.bin
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/images/seed.img
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/guest/id_ed25519
+fw_payload.bin sha256=f52cbc9c0ba6c41e07f2aee28b022dc5801bc44102a527f008f75687da8a2a98 (G05 artifact: f52cbc9c0ba6c41e07f2aee28b022dc5801bc44102a527f008f75687da8a2a98)
+
+$ qemu-system-riscv64 --version | head -1
+QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)
+(exit=0)
+QEMU command line:
+    qemu-system-riscv64
+    -machine
+    virt
+    -m
+    4096M
+    -smp
+    4
+    -bios
+    $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_payload.bin
+    -drive
+    file=$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img,format=raw,if=virtio
+    -drive
+    file=$HOME/projects/lattice-enclave-qemu-reproduction/work/images/seed.img,format=raw,if=virtio,readonly=on
+    -netdev
+    user,id=net0,hostfwd=tcp:<IPV4>:10022-:22
+    -device
+    virtio-net-pci,netdev=net0
+    -display
+    none
+    -serial
+    file:$HOME/projects/lattice-enclave-qemu-reproduction/logs/G07_first_boot_20261028T035507Z_serial.log
+    -monitor
+    unix:$HOME/projects/lattice-enclave-qemu-reproduction/work/run/monitor.sock,server,nowait
+    -daemonize
+    -pidfile
+    $HOME/projects/lattice-enclave-qemu-reproduction/work/run/qemu.pid
+
+==================== 2. Start VM ====================
+qemu-system-riscv64: -device virtio-net-pci,netdev=net0: failed to find romfile "efi-virtio.rom"
+
+==================== SUMMARY ====================
+[PASS] inputs present
+[PASS] firmware == G05 verified build
+[FAIL] QEMU start
+
+RESULT: FAIL=1 WARN=0

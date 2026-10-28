@@ -1,0 +1,99 @@
+
+==================== META ====================
+gate=G09 timestamp_utc=20261028T055117Z run_timeout=300s
+
+==================== 1. Host: static-pie variant + corrected stage manifest ====================
+
+$ riscv64-unknown-linux-gnu-gcc -static-pie -fPIE -O2 -Wno-unused-result -o '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/hello-pie' '$HOME/projects/lattice-enclave-qemu-reproduction/tests/enclave/hello.c' && file '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/hello-pie'
+/usr/lib/gcc-cross/riscv64-linux-gnu/13/../../../../riscv64-linux-gnu/bin/ld: cannot find rcrt1.o: No such file or directory
+collect2: error: ld returned 1 exit status
+(exit=1)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/SHA256SUMS'
+80d492612aeab525a751803a53d63c6639f1887e808ea476b336bb05f1528943  ./client
+9029003be8d5f0cae8af7bd8e10b3b56070178c2a616691363fad9ce2219042b  ./config.toml
+0143fecc8bc94892a60ab21fd1637aa64944f08abafd233f326a71d5661da7d4  ./fw-rt.bin
+9ca5a46500850bfd57f9b5ecabd61395de059ec16269f99d511b19bfd05e5890  ./hello
+61b4b73ab5c980510714a167af7cd7d2e018b19180fd3165dea9d79b58961478  ./tee_mod/main.c
+a0fac2b32e232c67314cf252a2a2aad9b4400bfb96a86c7c4669d74f8666c264  ./tee_mod/Makefile
+5d89cc88fb6bf7e6ed9182c1f2129f968966540ccf0d75d23488d4acfad16e0f  ./test_launcher
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -h '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/hello' '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/hello-pie' | grep -E 'File:|Type:|Entry'
+readelf: Error: '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/hello-pie': No such file
+File: $HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/hello
+  Type:                              EXEC (Executable file)
+  Entry point address:               0x104dc
+(exit=1)
+
+==================== 2. Boot guest, copy & verify stage, load teectl ====================
+
+[guest]$ cd ~/lattice && sha256sum -c --quiet SHA256SUMS && echo checksums-OK
+checksums-OK
+(exit=0)
+
+[guest]$ cd ~/lattice/tee_mod && make build >/dev/null 2>&1; ls -l teectl.ko && sudo insmod teectl.ko && ls -l /dev/teectl
+-rw-rw-r-- 1 ubuntu ubuntu 788792 Oct 28 05:52 teectl.ko
+crw------- 1 root root 10, 262 Oct 28 05:52 /dev/teectl
+(exit=0)
+
+==================== 3. Native baseline (outside enclave) ====================
+
+[guest]$ cd ~/lattice && for b in hello hello-pie; do s=$(date +%s%N); ./$b; e=$(date +%s%N); echo "native $b: $(( (e-s)/1000000 )) ms"; done
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+native hello: 46 ms
+bash: line 1: ./hello-pie: No such file or directory
+native hello-pie: 31 ms
+(exit=0)
+
+==================== 4. Enclave runs (LUE) ====================
+
+[guest]$ sudo timeout 300 ./client -c config.toml ./hello   (output -> logs/G09_enclave_smoke_20261028T055117Z_T1_hello_run1.log)
+alloc size: 0x1400000
+fd: 3
+command: 0x40106b01
+mmap fd: 4
+size: 20971520
+mmap addr: 0x7ff425f9c000
+memory region: 0x7ff425f9c000 - 0x7ff42739c000
+create enclave
+ssh_rc=255  wall_ms=75762
+--- serial console during run (SM/runtime/kernel output) ---
+panicked at crates/sm/src/sm.rs:211:43:
+called `Option::unwrap()` on a `None` value
+[   84.063124] watchdog: CPU1: Watchdog detected hard LOCKUP on cpu 2
+[  116.062876] watchdog: BUG: soft lockup - CPU#1 stuck for 21s! [systemd-journal:309]
+[  120.835017] rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+[  120.839251] rcu: 	3-...!: (7 ticks this GP) idle=9bfc/1/0x4000000000000000 softirq=4962/4964 fqs=125
+[  120.839621] rcu: 	(detected by 1, t=15004 jiffies, g=11533, q=32 ncpus=4)
+[  130.843775] rcu: rcu_preempt kthread starved for 9216 jiffies! g11533 f0x0 RCU_GP_WAIT_FQS(5) ->state=0x0 ->cpu=1
+[  130.844045] rcu: 	Unless rcu_preempt kthread gets sufficient CPU time, OOM is now expected behavior.
+[  130.844550] rcu: RCU grace-period kthread stack dump:
+[  130.845050] rcu: Stack dump where RCU GP kthread last ran:
+
+==================== 6. Forced stop (guest unresponsive) ====================
+vm_stop: graceful poweroff timed out -> HMP quit
+
+==================== 7. Serial console: SM / fault lines ====================
+62:hart 0 started
+217:hart 1 startedhart 2 startedhart 3 started[    0.000000] Booting Linux on hartid 0
+331:[    0.010955] pid_max: default: 32768 minimum: 301
+375:[    0.192003] iommu: Default domain type: Translated
+389:[    0.217161] NetLabel:  unlabeled traffic allowed by default
+410:[    0.287020] PCI: CLS 0 bytes, default 64
+467:[    0.426781] virtio_blk virtio1: 4/0/0 default/read/poll queues
+470:[    0.441726] virtio_blk virtio2: 4/0/0 default/read/poll queues
+869:panicked at crates/sm/src/sm.rs:211:43:
+
+==================== SUMMARY ====================
+[WARN] hello-pie build failed
+[PASS] QEMU started
+[PASS] SSH up after 46 s
+[PASS] stage copied
+[PASS] stage checksums verified in guest (all files)
+[PASS] teectl.ko built + loaded
+[FAIL] T1_hello_run1: SSH connection lost (guest hang/crash?)
+[PASS] VM stopped
+
+RESULT: FAIL=1 WARN=1

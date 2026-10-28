@@ -1,0 +1,219 @@
+
+==================== META ====================
+gate=G10 (v1) timestamp_utc=20261028T061245Z
+
+==================== 0. CHECKPOINT (every 5 gates): MAIN_TASK.md ====================
+# MAIN TASK (re-read at every 5th gate)
+
+## Phase A - Reproduce on QEMU (host: Ubuntu 24.04)
+1. Lattice Enclave  - paper: doi 10.1145/3844614 / code: github.com/LatticeEnclave/Lattice
+2. IBM ACE          - paper: arXiv 2505.12995 / code: github.com/IBM/ACE-RISCV
+3. RISC-V OP-TEE    - code: gitlab.com/riseproject/riscv-optee
+
+## Phase B - Port all three TEEs to Milk-V Jupiter 2
+SpacemiT K3 SoC (RVA23), 32 GB RAM, 128 GB SSD
+
+## Requirements
+R1 Publish to github.com/junlinh12 only after sanitizing personal / host-local info.
+R2 One Project, One Log System: one log folder per project (Lattice: logs/).
+R3 Every 5 gates: re-read this file and confirm no drift from the main task.
+R4 Check host environment & resources before starting each new project.
+R5 All projects live under ~/projects; never upload host-specific local info.
+
+Position: Phase A-1 (Lattice on QEMU). G09 v2 = first successful LSE+LUE. Next: G11 sanitize, G12 publish, then Phase A-2 (IBM ACE).
+
+--- gate ledger ---
+# Gate Ledger - lattice-enclave-qemu-reproduction
+
+Every 5th gate (G05, G10, ...) is a checkpoint: re-read ../../MAIN_TASK.md and
+record whether the current work still serves the main task.
+
+| Gate | Title | UTC time | Result | Log file | Checkpoint |
+|------|-------|----------|--------|----------|------------|
+| G01 | Host environment check | 20261026T123105Z | FAIL=0 WARN=3 | G01_host_env_20261026T123105Z.log | - |
+| G02 | Fetch & pin sources | 20261026T124504Z | FAIL=0 WARN=3 | G02_fetch_pin_20261026T124504Z.log | - |
+| G03 | Prepare build workspace | 20261026T125712Z | FAIL=0 WARN=0 | G03_prepare_workspace_20261026T125712Z.log | - |
+| G04 | Build security monitor (debug+release) | 20261026T130113Z | FAIL=2 WARN=0 | G04_build_sm_20261026T130113Z.log | - |
+| G04 | Build security monitor (debug+release) | 20261026T130918Z | FAIL=2 WARN=0 | G04_build_sm_20261026T130918Z.log | - |
+| G04 | Build security monitor (debug+release) | 20261026T131039Z | FAIL=0 WARN=0 | G04_build_sm_20261026T131039Z.log | - |
+| G05 | Build OpenSBI+SM+U-Boot, smoke test | 20261026T131039Z | FAIL=0 WARN=0 | G05_build_fw_20261026T131039Z.log | MAIN_TASK re-read |
+| G06 | Prepare guest rootfs (Ubuntu 24.04.5 riscv64) | 20261028T033415Z | FAIL=0 WARN=0 | G06_guest_rootfs_20261028T033415Z.log | - |
+| G07 | First Linux boot on Lattice fw (cloud-init) | 20261028T035507Z | FAIL=1 WARN=0 | G07_first_boot_20261028T035507Z.log | - |
+| G07 | First Linux boot on Lattice fw (cloud-init) | 20261028T040026Z | FAIL=0 WARN=1 | G07_first_boot_20261028T040026Z.log | - |
+| G08 | Build userland + teectl.ko, load in guest | 20261028T053046Z | FAIL=1 WARN=0 | G08_userland_module_20261028T053046Z.log | - |
+| G09 | First enclave run (LUE hello x3, hello-pie) | 20261028T054214Z | FAIL=1 WARN=1 | G09_enclave_smoke_20261028T054214Z.log | - |
+| G09 | First enclave run (LUE hello x3, hello-pie) | 20261028T055117Z | FAIL=1 WARN=1 | G09_enclave_smoke_20261028T055117Z.log | - |
+| G09 | Enclave run v2 (LSE + LUE hello x3) | 20261028T055959Z | FAIL=0 WARN=0 | G09_enclave_smoke_20261028T055959Z.log | - |
+
+==================== 1. Host: build payloads ====================
+
+$ riscv64-unknown-linux-gnu-gcc -static -O2 -o '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/empty'   '$HOME/projects/lattice-enclave-qemu-reproduction/tests/enclave/empty.c'
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-gcc -static -O2 -o '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/bench'   '$HOME/projects/lattice-enclave-qemu-reproduction/tests/enclave/bench.c'
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-gcc -static -O2 -o '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/memfill' '$HOME/projects/lattice-enclave-qemu-reproduction/tests/tools/memfill.c'
+(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/SHA256SUMS'
+73e811d05ae4a26509a8f70feee34d77907953cdc0519ab8be6a973513201d4d  ./bench
+80d492612aeab525a751803a53d63c6639f1887e808ea476b336bb05f1528943  ./client
+9029003be8d5f0cae8af7bd8e10b3b56070178c2a616691363fad9ce2219042b  ./config.toml
+b85bb835010247315f41d968cfdc02c90e884635c8f91e273f2f27483bcc1edc  ./empty
+0143fecc8bc94892a60ab21fd1637aa64944f08abafd233f326a71d5661da7d4  ./fw-rt.bin
+9ca5a46500850bfd57f9b5ecabd61395de059ec16269f99d511b19bfd05e5890  ./hello
+7ea7aa4aa47f9987911d92c230c53205977d9df79fcc70c56ea19ebc4e2a2989  ./memfill
+61b4b73ab5c980510714a167af7cd7d2e018b19180fd3165dea9d79b58961478  ./tee_mod/main.c
+a0fac2b32e232c67314cf252a2a2aad9b4400bfb96a86c7c4669d74f8666c264  ./tee_mod/Makefile
+5d89cc88fb6bf7e6ed9182c1f2129f968966540ccf0d75d23488d4acfad16e0f  ./test_launcher
+(exit=0)
+
+==================== 1b. LDE support in public SM source (static check, not executed) ====================
+
+$ grep -n 'USER_ENC\|SER_ENC\|unknown enclave type' '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/sm/src/sm.rs'
+338:        const USER_ENC: usize = EnclaveType::User as usize;
+339:        const SER_ENC: usize = EnclaveType::Service as usize;
+342:            USER_ENC => self.create_lue(regs.a0),
+343:            SER_ENC => self.create_lse(regs.a0),
+344:            _ => panic!("unknown enclave type"),
+(exit=0)
+
+$ grep -n 'in("a1")' '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/channel/src/enclave.rs'
+33:                in("a1") 1,
+56:                in("a1") 3,
+78:                in("a1") 2,
+129:    //             in("a1") rc,
+(exit=0)
+
+==================== 2. Boot, stage, teectl, LSE ====================
+
+[guest]$ cd ~/lattice && sha256sum -c --quiet SHA256SUMS && echo checksums-OK
+checksums-OK
+(exit=0)
+
+[guest]$ cd ~/lattice/tee_mod && make build >/dev/null 2>&1; sudo insmod teectl.ko && ls -l /dev/teectl
+crw------- 1 root root 10, 262 Oct 28 06:13 /dev/teectl
+(exit=0)
+
+[guest]$ cd ~/lattice && sudo sh -c "nohup ./client --lse -c config.toml > lse.out 2>&1 < /dev/null &"; for i in $(seq 1 60); do grep -q "lse created" lse.out 2>/dev/null && break; sleep 2; done; tail -3 lse.out
+create enclave
+lse created
+eidx: 0x2
+(exit=0)
+
+==================== 3. Functional matrix (LUE payloads) ====================
+--- LUE hello ---
+memory region: 0x7ff5d030a000 - 0x7ff5d170a000
+create enclave
+lue created
+eidx: 0x3
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+enclave finished
+__RC=0
+--- LUE empty ---
+memory region: 0x7ff37f552000 - 0x7ff380952000
+create enclave
+lue created
+eidx: 0x4
+enclave finished
+__RC=0
+--- LUE bench ---
+memory region: 0x7ffcdffdc000 - 0x7ffce13dc000
+create enclave
+lue created
+eidx: 0x5
+BENCH getpid n=10000 total_ns=79809600 per_ns=7980
+BENCH write_devnull n=1000 total_ns=372237600 per_ns=372237 fd=3 err=0
+BENCH compute n=50000000 total_ns=76938300 sum=1249999975000000
+enclave finished
+__RC=0
+
+==================== 4. Latency (inside guest, one sudo per batch; TCG) ====================
+RUN native empty 1 41820 0
+RUN native empty 2 35027 0
+RUN native empty 3 28072 0
+RUN native empty 4 32761 0
+RUN native empty 5 27831 0
+RUN native empty 6 27111 0
+RUN native empty 7 27470 0
+RUN native empty 8 27444 0
+RUN native empty 9 26742 0
+RUN native empty 10 26797 0
+RUN lue empty 1 133461 0 1
+RUN lue empty 2 130707 0 1
+RUN lue empty 3 128975 0 1
+RUN lue empty 4 120319 0 1
+RUN lue empty 5 121064 0 1
+RUN lue empty 6 121668 0 1
+RUN lue empty 7 126281 0 1
+RUN lue empty 8 133641 0 1
+RUN lue empty 9 144318 0 1
+RUN lue empty 10 130133 0 1
+native 1 BENCH getpid n=10000 total_ns=5182900 per_ns=518
+native 1 BENCH write_devnull n=1000 total_ns=757100 per_ns=757 fd=3 err=0
+native 1 BENCH compute n=50000000 total_ns=68328200 sum=1249999975000000
+native 2 BENCH getpid n=10000 total_ns=5203500 per_ns=520
+native 2 BENCH write_devnull n=1000 total_ns=726000 per_ns=726 fd=3 err=0
+native 2 BENCH compute n=50000000 total_ns=68498600 sum=1249999975000000
+native 3 BENCH getpid n=10000 total_ns=5147900 per_ns=514
+native 3 BENCH write_devnull n=1000 total_ns=763000 per_ns=763 fd=3 err=0
+native 3 BENCH compute n=50000000 total_ns=68449300 sum=1249999975000000
+lue 1 BENCH getpid n=10000 total_ns=76901900 per_ns=7690
+lue 1 BENCH write_devnull n=1000 total_ns=298659700 per_ns=298659 fd=3 err=0
+lue 1 BENCH compute n=50000000 total_ns=75173800 sum=1249999975000000
+lue 2 BENCH getpid n=10000 total_ns=85056100 per_ns=8505
+lue 2 BENCH write_devnull n=1000 total_ns=438575200 per_ns=438575 fd=3 err=0
+lue 2 BENCH compute n=50000000 total_ns=76313800 sum=1249999975000000
+lue 3 BENCH getpid n=10000 total_ns=75524100 per_ns=7552
+lue 3 BENCH write_devnull n=1000 total_ns=223471900 per_ns=223471 fd=3 err=0
+lue 3 BENCH compute n=50000000 total_ns=75911500 sum=1249999975000000
+e2e empty [native] ms: n=10 mean=30.1 median=27.7 min=26.742 max=41.82
+e2e empty [lue] ms: n=10 mean=129.1 median=129.6 min=120.319 max=144.318
+bench getpid [native] per_ns: n=3 mean=517.3 median=518.0 min=514 max=520
+bench getpid [lue] per_ns: n=3 mean=7915.7 median=7690.0 min=7552 max=8505
+bench write_devnull [native] per_ns: n=3 mean=748.7 median=757.0 min=726 max=763
+bench write_devnull [lue] per_ns: n=3 mean=320235.0 median=298659.0 min=223471 max=438575
+bench compute [native] total_ns: n=3 mean=68425366.7 median=68449300.0 min=68328200 max=68498600
+bench compute [lue] total_ns: n=3 mean=75799700.0 median=75911500.0 min=75173800 max=76313800
+
+==================== 5. Concurrency (test_launcher, parallel LUEs) ====================
+N=2 ssh_rc=0 finished=2 correct_sums=2
+N=4 ssh_rc=0 finished=4 correct_sums=4
+N=8 ssh_rc=0 finished=8 correct_sums=8
+
+[guest]$ sudo dmesg | grep -iE "Oops|BUG:|lockup|stall" | tail -5; free -m | head -2
+               total        used        free      shared  buff/cache   available
+Mem:            3900         323        3272           0         453        3576
+(exit=0)
+
+==================== 6. Memory-reuse experiment (G09 shutdown-hang hypothesis) ====================
+fill size = 85% of MemAvailable = 3092 MB
+
+[guest]$ cd ~/lattice && timeout 300 ./memfill 3092; echo __RC=$?
+Connection to <IPV4> closed by remote host.
+(exit=255)
+
+==================== SUMMARY ====================
+[PASS] MAIN_TASK.md re-read at G10
+[PASS] empty built
+[PASS] bench built
+[PASS] memfill built
+[WARN] LDE not implemented in public SM: create_enclave() accepts User(1)/Service(3) only; client --lde sends 2 -> SM panic. Not executed.
+[PASS] QEMU started
+[PASS] SSH up after 46 s
+[PASS] stage verified in guest
+[PASS] teectl loaded
+[PASS] F1 LSE created
+[PASS] F2 LUE hello runs to completion
+[PASS] F2 LUE empty runs to completion
+[PASS] F2 LUE bench runs to completion
+[PASS] L1 10/10 LUE(empty) runs completed
+[PASS] L2 proxied write() works inside enclave
+[PASS] C2 2/2 parallel LUEs correct
+[PASS] C4 4/4 parallel LUEs correct
+[PASS] C8 8/8 parallel LUEs correct
+[FAIL] M-A control fill hung the guest
+
+RESULT: FAIL=1 WARN=1

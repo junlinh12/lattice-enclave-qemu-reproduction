@@ -1,0 +1,186 @@
+
+==================== META ====================
+gate=G02 timestamp_utc=20261026T124504Z
+
+$ git --version
+git version 2.43.0
+(exit=0)
+
+==================== Fetch: Lattice @ 05664a26af63e0898828a37b4387efc188388dbf ====================
+
+$ git clone 'https://github.com/LatticeEnclave/Lattice.git' '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice'
+Cloning into '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice'...
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice' -c advice.detachedHead=false checkout '05664a26af63e0898828a37b4387efc188388dbf'
+HEAD is now at 05664a2 update
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice' log -1 --format='HEAD=%H%ncommit_date=%cI%nsubject=%s'
+HEAD=05664a26af63e0898828a37b4387efc188388dbf
+commit_date=2025-05-26T10:26:24+08:00
+subject=update
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice' status --short | wc -l
+0
+(exit=0)
+
+==================== Fetch: opensbi @ ef4520b1c63fc2770b10d952a800f9734f861b0a ====================
+
+$ git clone 'https://github.com/riscv-software-src/opensbi.git' '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi'
+Cloning into '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi'...
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi' -c advice.detachedHead=false checkout 'ef4520b1c63fc2770b10d952a800f9734f861b0a'
+HEAD is now at ef4520b1 lib: Delete redundant `ulong`
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi' log -1 --format='HEAD=%H%ncommit_date=%cI%nsubject=%s'
+HEAD=ef4520b1c63fc2770b10d952a800f9734f861b0a
+commit_date=2024-08-24T14:42:14+05:30
+subject=lib: Delete redundant `ulong`
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi' status --short | wc -l
+0
+(exit=0)
+
+==================== Fetch: u-boot @ v2024.10 ====================
+
+$ git clone --depth 1 --branch 'v2024.10' 'https://github.com/u-boot/u-boot.git' '$HOME/projects/lattice-enclave-qemu-reproduction/sources/u-boot'
+Cloning into '$HOME/projects/lattice-enclave-qemu-reproduction/sources/u-boot'...
+Note: switching to 'f919c3a889f0ec7d63a48b5d0ed064386b0980bd'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/u-boot' log -1 --format='HEAD=%H%ncommit_date=%cI%nsubject=%s'
+HEAD=f919c3a889f0ec7d63a48b5d0ed064386b0980bd
+commit_date=2024-10-07T08:54:35-06:00
+subject=Prepare v2024.10
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/u-boot' status --short | wc -l
+0
+(exit=0)
+
+==================== Static checks on Lattice tree ====================
+
+$ ls -1A '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice'
+.cargo
+Cargo.toml
+crates
+.git
+.gitignore
+linux
+Makefile
+platform
+README.md
+runtime
+rust-toolchain.toml
+(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice/rust-toolchain.toml'
+[toolchain]
+profile = "minimal"
+channel = "nightly-2024-11-27"
+# channel = "nightly"
+components = ["rust-src", "rustfmt", "clippy", "llvm-tools-preview"]
+targets = ["riscv64imac-unknown-none-elf", "riscv64gc-unknown-linux-gnu"]
+(exit=0)
+
+$ grep -n 'opensbi_commit' '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice/platform/qemu-virt/firmware.mk'
+2:opensbi_commit := ef4520b1c63fc2770b10d952a800f9734f861b0a
+40:	cd $(opensbi_path) && git checkout $(opensbi_commit)
+(exit=0)
+
+==================== Workspace member existence ====================
+MISSING: tests
+present: runtime
+present: crates
+present: platform
+
+==================== OpenSBI patch applicability (check only, no change) ====================
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi' apply --check --verbose '$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice/platform/qemu-virt/qemu.patch'
+Checking patch firmware/fw_base.S...
+Checking patch firmware/fw_base.ldS...
+Checking patch firmware/objects.mk...
+Checking patch lib/sbi/sbi_hart.c...
+Checking patch lib/sbi/sbi_hsm.c...
+(exit=0)
+
+==================== U-Boot defconfig used by firmware.mk ====================
+found configs/qemu-riscv64_smode_defconfig
+
+==================== Prior Lattice source (READ-ONLY comparison with upstream) ====================
+
+$ git -C '$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice' log --format='%h %cI %s' -n 15
+707e66e 2026-09-24T21:04:24+09:00 repro: exclude inactive htee workspace members
+887cb68 2026-09-24T20:49:19+09:00 repro: remove nonexistent tests workspace member
+05664a2 2025-05-26T10:26:24+08:00 update
+7d96762 2025-05-26T10:10:02+08:00 update
+aff9813 2025-05-23T16:44:05+08:00 update
+9c1e7dc 2025-05-23T10:34:21+08:00 update
+d1fd528 2025-05-23T10:32:41+08:00 add README
+c85e58e 2025-05-23T10:31:19+08:00 update
+9e10f30 2025-05-16T12:51:31+08:00 init
+(exit=0)
+
+$ git -C '$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice' remote -v | sed -E 's#://[^@/]+@#://<CRED>@#'
+origin	https://github.com/LatticeEnclave/Lattice.git (fetch)
+origin	https://github.com/LatticeEnclave/Lattice.git (push)
+(exit=0)
+upstream commit is an ancestor candidate in prior repo
+
+$ git -C '$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice' merge-base --is-ancestor 05664a26af63e0898828a37b4387efc188388dbf HEAD && echo 'prior HEAD = upstream + local commits'
+prior HEAD = upstream + local commits
+(exit=0)
+
+$ git -C '$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice' log --format='%h %s' 05664a26af63e0898828a37b4387efc188388dbf..HEAD
+707e66e repro: exclude inactive htee workspace members
+887cb68 repro: remove nonexistent tests workspace member
+(exit=0)
+
+$ git -C '$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice' diff --stat 05664a26af63e0898828a37b4387efc188388dbf HEAD
+ Cargo.toml | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+(exit=0)
+
+==================== Disk usage ====================
+
+$ du -sh '$HOME/projects/lattice-enclave-qemu-reproduction/sources'/* 2>/dev/null
+3.1M	$HOME/projects/lattice-enclave-qemu-reproduction/sources/Lattice
+7.6M	$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi
+313M	$HOME/projects/lattice-enclave-qemu-reproduction/sources/u-boot
+(exit=0)
+
+==================== SUMMARY ====================
+[PASS] Lattice working tree clean
+[PASS] Lattice HEAD == 05664a26af63e0898828a37b4387efc188388dbf
+[PASS] opensbi working tree clean
+[PASS] opensbi HEAD == ef4520b1c63fc2770b10d952a800f9734f861b0a
+[PASS] u-boot working tree clean
+[PASS] firmware.mk pins OpenSBI ef4520b1c63fc2770b10d952a800f9734f861b0a
+[WARN] Cargo workspace member 'tests' does not exist in upstream tree (fix needed at G04)
+[WARN] No Cargo.lock upstream: crate versions float (lockfile to be generated & recorded at G04)
+[PASS] qemu.patch applies cleanly to OpenSBI ef4520b1c63fc2770b10d952a800f9734f861b0a
+[PASS] u-boot v2024.10 has qemu-riscv64_smode_defconfig
+[WARN] prior source is a locally modified tree; used as reference only
+
+RESULT: FAIL=0 WARN=3

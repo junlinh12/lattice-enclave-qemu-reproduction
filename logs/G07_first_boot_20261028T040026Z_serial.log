@@ -1,0 +1,1421 @@
+
+OpenSBI v1.5-51-gef4520b1
+   ____                    _____ ____ _____
+  / __ \                  / ____|  _ \_   _|
+ | |  | |_ __   ___ _ __ | (___ | |_) || |
+ | |  | | '_ \ / _ \ '_ \ \___ \|  _ < | |
+ | |__| | |_) |  __/ | | |____) | |_) || |_
+  \____/| .__/ \___|_| |_|_____/|____/_____|
+        | |
+        |_|
+
+Platform Name             : riscv-virtio,qemu
+Platform Features         : medeleg
+Platform HART Count       : 4
+Platform IPI Device       : aclint-mswi
+Platform Timer Device     : aclint-mtimer @ 10000000Hz
+Platform Console Device   : uart8250
+Platform HSM Device       : ---
+Platform PMU Device       : ---
+Platform Reboot Device    : syscon-reboot
+Platform Shutdown Device  : syscon-poweroff
+Platform Suspend Device   : ---
+Platform CPPC Device      : ---
+Firmware Base             : 0x80000000
+Firmware Size             : 613 KB
+Firmware RW Offset        : 0x80000
+Firmware RW Size          : 101 KB
+Firmware Heap Offset      : 0x8f000
+Firmware Heap Size        : 41 KB (total), 2 KB (reserved), 11 KB (used), 27 KB (free)
+Firmware Scratch Size     : 4096 B (total), 416 B (used), 3680 B (free)
+Runtime SBI Version       : 2.0
+
+Domain0 Name              : root
+Domain0 Boot HART         : 1
+Domain0 HARTs             : 0*,1*,2*,3*
+Domain0 Region00          : 0x0000000000100000-0x0000000000100fff M: (I,R,W) S/U: (R,W)
+Domain0 Region01          : 0x0000000010000000-0x0000000010000fff M: (I,R,W) S/U: (R,W)
+Domain0 Region02          : 0x0000000002000000-0x000000000200ffff M: (I,R,W) S/U: ()
+Domain0 Region03          : 0x0000000080080000-0x000000008009ffff M: (R,W) S/U: ()
+Domain0 Region04          : 0x0000000080000000-0x000000008007ffff M: (R,X) S/U: ()
+Domain0 Region05          : 0x000000000c400000-0x000000000c5fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region06          : 0x000000000c000000-0x000000000c3fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region07          : 0x0000000000000000-0xffffffffffffffff M: () S/U: (R,W,X)
+Domain0 Next Address      : 0x0000000080200000
+Domain0 Next Arg1         : 0x0000000082200000
+Domain0 Next Mode         : S-mode
+Domain0 SysReset          : yes
+Domain0 SysSuspend        : yes
+
+Boot HART ID              : 1
+Boot HART Domain          : root
+Boot HART Priv Version    : v1.12
+Boot HART Base ISA        : rv64imafdch
+Boot HART ISA Extensions  : sstc,zicntr,zihpm,zicboz,zicbom,sdtrig,svadu
+Boot HART PMP Count       : 16
+Boot HART PMP Granularity : 2 bits
+Boot HART PMP Address Bits: 54
+Boot HART MHPM Info       : 16 (0x0007fff8)
+Boot HART Debug Triggers  : 2 triggers
+Boot HART MIDELEG         : 0x0000000000001666
+Boot HART MEDELEG         : 0x0000000000f0b509
+hart 1 started
+
+U-Boot 2024.10 (Oct 26 2026 - 22:10:42 +0900)
+
+CPU:   riscv
+Model: riscv-virtio,qemu
+DRAM:  4 GiB
+Core:  30 devices, 13 uclasses, devicetree: board
+Flash: 32 MiB
+Loading Environment from nowhere... OK
+In:    serial,usbkbd
+Out:   serial,vidconsole
+Err:   serial,vidconsole
+No USB controllers found
+Net:   eth0: virtio-net#8
+
+Working FDT set to 17eefb330
+Hit any key to stop autoboot:  2  1  0 
+
+Device 0: 1af4 VirtIO Block Device
+            Type: Hard Disk
+            Capacity: 32768.0 MB = 32.0 GB (67108864 x 512)
+... is now current device
+Scanning virtio 0:1...
+Failed to load '/'
+78Failed to load EFI variables
+Missing RNG device for EFI_RNG_PROTOCOL
+Booting: virtio 0
+No RNG device
+error: no suitable video mode found.
+GNU GRUB  version 2.12
+
+┌────────────────────────────────────────────────────────────────────────────┐││││││││││││││││││││││││││└────────────────────────────────────────────────────────────────────────────┘     Use the ▲ and ▼ keys to select which entry is highlighted.          
+      Press enter to boot the selected OS, `e' to edit the commands       
+      before booting or `c' for a command-line.                            *Ubuntu                                                                      Advanced options for Ubuntu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        The highlighted entry will be executed automatically in 10s.                   The highlighted entry will be executed automatically in 9s.                    The highlighted entry will be executed automatically in 8s.                    The highlighted entry will be executed automatically in 7s.                    The highlighted entry will be executed automatically in 6s.                    The highlighted entry will be executed automatically in 5s.                    The highlighted entry will be executed automatically in 4s.                    The highlighted entry will be executed automatically in 3s.                    The highlighted entry will be executed automatically in 2s.                    The highlighted entry will be executed automatically in 1s.                    The highlighted entry will be executed automatically in 0s.                   Booting `Ubuntu'
+
+Loading Linux 7.0.0-31-generic ...
+Loading initial ramdisk ...
+EFI stub: Booting Linux Kernel...
+EFI stub: EFI_RNG_PROTOCOL unavailable
+EFI stub: Loaded initrd from LINUX_EFI_INITRD_MEDIA_GUID device path
+EFI stub: Using DTB from configuration table
+EFI stub: Exiting boot services...
+[    0.000000] Booting Linux on hartid 1
+[    0.000000] Linux version 7.0.0-31-generic (buildd@bos03-riscv64-039) (riscv64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #31.1~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 25 15:43:59 UTC (Ubuntu 7.0.0-31.31.1~24.04.1-generic 7.0.14)
+[    0.000000] random: crng init done
+[    0.000000] Machine model: riscv-virtio,qemu
+[    0.000000] SBI specification v2.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10005
+[    0.000000] SBI TIME extension detected
+[    0.000000] SBI IPI extension detected
+[    0.000000] SBI RFENCE extension detected
+[    0.000000] SBI SRST extension detected
+[    0.000000] SBI DBCN extension detected
+[    0.000000] efi: Getting UEFI parameters from /chosen in DT:
+[    0.000000] efi:   System Table         : 0x000000017f71dfe0
+[    0.000000] efi:   MemMap Address       : 0x000000017deae068
+[    0.000000] efi:   MemMap Size          : 0x00000000000004d8
+[    0.000000] efi:   MemMap Desc. Size    : 0x0000000000000028
+[    0.000000] efi:   MemMap Desc. Version : 0x0000000000000001
+[    0.000000] efi:   Secure Boot Enabled  : 0x00000002
+[    0.000000] efi: EFI v2.10 by Das U-Boot
+[    0.000000] efi: RTPROP=0x17dec6040 SMBIOS 3.0=0x17ef1e000 INITRD=0x17deb1040 MEMRESERVE=0x17deb0040 
+[    0.000000] secureboot: Secure boot disabled
+[    0.000000] efi: Processing EFI memory map:
+[    0.000000] efi:   0x000080000000-0x00008009ffff [Reserved    |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x0000800a0000-0x00016e59bfff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00016e59c000-0x00016e79bfff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00016e79c000-0x00016e99bfff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00016e99c000-0x0001731fffff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000173200000-0x000176040fff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000176041000-0x000176105fff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000176106000-0x000179146fff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000179147000-0x00017be6ffff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017be70000-0x00017de96fff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017de97000-0x00017de99fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017de9a000-0x00017dea8fff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dea9000-0x00017deaafff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deab000-0x00017deadfff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deae000-0x00017deaefff [ACPI Reclaim|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deaf000-0x00017deb3fff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deb4000-0x00017deb4fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deb5000-0x00017deb8fff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deb9000-0x00017debbfff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017debc000-0x00017debcfff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017debd000-0x00017dec1fff [ACPI Reclaim|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec2000-0x00017dec5fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec6000-0x00017dec6fff [Runtime Data|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec7000-0x00017dec7fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec8000-0x00017dee9fff [Runtime Data|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deea000-0x00017defafff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017defb000-0x00017ef1dfff [Boot Code   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017ef1e000-0x00017ef1efff [Runtime Data|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017ef1f000-0x00017f71cfff [Boot Code   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017f71d000-0x00017f71efff [Runtime Code|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017f71f000-0x00017fffffff [Boot Code   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] cma: Reserved 32 MiB at 0x00000000fe000000
+[    0.000000] earlycon: ns16550a0 at MMIO 0x0000000010000000 (options '')
+[    0.000000] printk: legacy bootconsole [ns16550a0] enabled
+[    0.000000] OF: reserved mem: 0x0000000080000000..0x000000008007ffff (512 KiB) nomap non-reusable mmode_resv1@80000000
+[    0.000000] OF: reserved mem: 0x0000000080080000..0x000000008009ffff (128 KiB) nomap non-reusable mmode_resv0@80080000
+[    0.000000] NUMA: Faking a node at [mem 0x0000000080000000-0x000000017fffffff]
+[    0.000000] NODE_DATA(0) allocated [mem 0x17fdeb2c0-0x17fdeda7f]
+[    0.000000] SBI HSM extension detected
+[    0.000000] Falling back to deprecated "riscv,isa"
+[    0.000000] riscv: base ISA extensions acdfhim
+[    0.000000] riscv: ELF capabilities acdfim
+[    0.000000] Ticket spinlock: enabled
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000080000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000017fffffff]
+[    0.000000]   Device   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080000000-0x000000008009ffff]
+[    0.000000]   node   0: [mem 0x00000000800a0000-0x000000017dec5fff]
+[    0.000000]   node   0: [mem 0x000000017dec6000-0x000000017dec6fff]
+[    0.000000]   node   0: [mem 0x000000017dec7000-0x000000017dec7fff]
+[    0.000000]   node   0: [mem 0x000000017dec8000-0x000000017dee9fff]
+[    0.000000]   node   0: [mem 0x000000017deea000-0x000000017ef1dfff]
+[    0.000000]   node   0: [mem 0x000000017ef1e000-0x000000017ef1efff]
+[    0.000000]   node   0: [mem 0x000000017ef1f000-0x000000017f71cfff]
+[    0.000000]   node   0: [mem 0x000000017f71d000-0x000000017f71efff]
+[    0.000000]   node   0: [mem 0x000000017f71f000-0x000000017fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080000000-0x000000017fffffff]
+[    0.000000] percpu: Embedded 55 pages/cpu s98392 r8192 d118696 u225280
+[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-7.0.0-31-generic root=LABEL=cloudimg-rootfs ro efi=debug earlycon
+[    0.000000] printk: log buffer data + meta data: 262144 + 1114112 = 1376256 bytes
+[    0.000000] Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes, linear)
+[    0.000000] software IO TLB: area num 4.
+[    0.000000] software IO TLB: mapped [mem 0x00000000fa000000-0x00000000fe000000] (64MB)
+[    0.000000] Fallback order for Node 0: 0 
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 1048576
+[    0.000000] Policy zone: Normal
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:on, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] Dynamic Preempt: lazy
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] rcu: 	RCU restricting CPUs from NR_CPUS=512 to nr_cpu_ids=4.
+[    0.000000] 	Trampoline variant of Tasks RCU enabled.
+[    0.000000] 	Tracing variant of Tasks RCU enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.000000] RCU Tasks: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4.
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] riscv-intc: 64 local interrupts mapped
+[    0.000000] riscv: providing IPIs using SBI IPI extension
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x24e6a1710, max_idle_ns: 440795202120 ns
+[    0.000048] sched_clock: 64 bits at 10MHz, resolution 100ns, wraps every 4398046511100ns
+[    0.000366] riscv-timer: Timer interrupt in S-mode is available via sstc extension
+[    0.004714] Console: colour dummy device 80x25
+[    0.005013] printk: legacy console [tty0] enabled
+[    0.007419] printk: legacy bootconsole [ns16550a0] disabled
+hart 0 startedhart 2 startedhart 3 started[    0.000000] Booting Linux on hartid 1
+[    0.000000] Linux version 7.0.0-31-generic (buildd@bos03-riscv64-039) (riscv64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #31.1~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 25 15:43:59 UTC (Ubuntu 7.0.0-31.31.1~24.04.1-generic 7.0.14)
+[    0.000000] random: crng init done
+[    0.000000] Machine model: riscv-virtio,qemu
+[    0.000000] SBI specification v2.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10005
+[    0.000000] SBI TIME extension detected
+[    0.000000] SBI IPI extension detected
+[    0.000000] SBI RFENCE extension detected
+[    0.000000] SBI SRST extension detected
+[    0.000000] SBI DBCN extension detected
+[    0.000000] efi: Getting UEFI parameters from /chosen in DT:
+[    0.000000] efi:   System Table         : 0x000000017f71dfe0
+[    0.000000] efi:   MemMap Address       : 0x000000017deae068
+[    0.000000] efi:   MemMap Size          : 0x00000000000004d8
+[    0.000000] efi:   MemMap Desc. Size    : 0x0000000000000028
+[    0.000000] efi:   MemMap Desc. Version : 0x0000000000000001
+[    0.000000] efi:   Secure Boot Enabled  : 0x00000002
+[    0.000000] efi: EFI v2.10 by Das U-Boot
+[    0.000000] efi: RTPROP=0x17dec6040 SMBIOS 3.0=0x17ef1e000 INITRD=0x17deb1040 MEMRESERVE=0x17deb0040 
+[    0.000000] secureboot: Secure boot disabled
+[    0.000000] efi: Processing EFI memory map:
+[    0.000000] efi:   0x000080000000-0x00008009ffff [Reserved    |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x0000800a0000-0x00016e59bfff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00016e59c000-0x00016e79bfff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00016e79c000-0x00016e99bfff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00016e99c000-0x0001731fffff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000173200000-0x000176040fff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000176041000-0x000176105fff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000176106000-0x000179146fff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x000179147000-0x00017be6ffff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017be70000-0x00017de96fff [Loader Code |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017de97000-0x00017de99fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017de9a000-0x00017dea8fff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dea9000-0x00017deaafff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deab000-0x00017deadfff [Conventional|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deae000-0x00017deaefff [ACPI Reclaim|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deaf000-0x00017deb3fff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deb4000-0x00017deb4fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deb5000-0x00017deb8fff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deb9000-0x00017debbfff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017debc000-0x00017debcfff [Loader Data |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017debd000-0x00017dec1fff [ACPI Reclaim|   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec2000-0x00017dec5fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec6000-0x00017dec6fff [Runtime Data|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec7000-0x00017dec7fff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017dec8000-0x00017dee9fff [Runtime Data|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017deea000-0x00017defafff [Boot Data   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017defb000-0x00017ef1dfff [Boot Code   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017ef1e000-0x00017ef1efff [Runtime Data|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017ef1f000-0x00017f71cfff [Boot Code   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017f71d000-0x00017f71efff [Runtime Code|RUN|  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] efi:   0x00017f71f000-0x00017fffffff [Boot Code   |   |  |  |  |  |  |  |  |  |  |   |WB|  |  |  ]
+[    0.000000] cma: Reserved 32 MiB at 0x00000000fe000000
+[    0.000000] earlycon: ns16550a0 at MMIO 0x0000000010000000 (options '')
+[    0.000000] printk: legacy bootconsole [ns16550a0] enabled
+[    0.000000] OF: reserved mem: 0x0000000080000000..0x000000008007ffff (512 KiB) nomap non-reusable mmode_resv1@80000000
+[    0.000000] OF: reserved mem: 0x0000000080080000..0x000000008009ffff (128 KiB) nomap non-reusable mmode_resv0@80080000
+[    0.000000] NUMA: Faking a node at [mem 0x0000000080000000-0x000000017fffffff]
+[    0.000000] NODE_DATA(0) allocated [mem 0x17fdeb2c0-0x17fdeda7f]
+[    0.000000] SBI HSM extension detected
+[    0.000000] Falling back to deprecated "riscv,isa"
+[    0.000000] riscv: base ISA extensions acdfhim
+[    0.000000] riscv: ELF capabilities acdfim
+[    0.000000] Ticket spinlock: enabled
+[    0.000000] Zone ranges:
+[    0.000000]   DMA32    [mem 0x0000000080000000-0x00000000ffffffff]
+[    0.000000]   Normal   [mem 0x0000000100000000-0x000000017fffffff]
+[    0.000000]   Device   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080000000-0x000000008009ffff]
+[    0.000000]   node   0: [mem 0x00000000800a0000-0x000000017dec5fff]
+[    0.000000]   node   0: [mem 0x000000017dec6000-0x000000017dec6fff]
+[    0.000000]   node   0: [mem 0x000000017dec7000-0x000000017dec7fff]
+[    0.000000]   node   0: [mem 0x000000017dec8000-0x000000017dee9fff]
+[    0.000000]   node   0: [mem 0x000000017deea000-0x000000017ef1dfff]
+[    0.000000]   node   0: [mem 0x000000017ef1e000-0x000000017ef1efff]
+[    0.000000]   node   0: [mem 0x000000017ef1f000-0x000000017f71cfff]
+[    0.000000]   node   0: [mem 0x000000017f71d000-0x000000017f71efff]
+[    0.000000]   node   0: [mem 0x000000017f71f000-0x000000017fffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080000000-0x000000017fffffff]
+[    0.000000] percpu: Embedded 55 pages/cpu s98392 r8192 d118696 u225280
+[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-7.0.0-31-generic root=LABEL=cloudimg-rootfs ro efi=debug earlycon
+[    0.000000] printk: log buffer data + meta data: 262144 + 1114112 = 1376256 bytes
+[    0.000000] Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes, linear)
+[    0.000000] software IO TLB: area num 4.
+[    0.000000] software IO TLB: mapped [mem 0x00000000fa000000-0x00000000fe000000] (64MB)
+[    0.000000] Fallback order for Node 0: 0 
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 1048576
+[    0.000000] Policy zone: Normal
+[    0.000000] mem auto-init: stack:all(zero), heap alloc:on, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] Dynamic Preempt: lazy
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] rcu: 	RCU restricting CPUs from NR_CPUS=512 to nr_cpu_ids=4.
+[    0.000000] 	Trampoline variant of Tasks RCU enabled.
+[    0.000000] 	Tracing variant of Tasks RCU enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.000000] RCU Tasks: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4.
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] riscv-intc: 64 local interrupts mapped
+[    0.000000] riscv: providing IPIs using SBI IPI extension
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x24e6a1710, max_idle_ns: 440795202120 ns
+[    0.000048] sched_clock: 64 bits at 10MHz, resolution 100ns, wraps every 4398046511100ns
+[    0.000366] riscv-timer: Timer interrupt in S-mode is available via sstc extension
+[    0.004714] Console: colour dummy device 80x25
+[    0.005013] printk: legacy console [tty0] enabled
+[    0.007419] printk: legacy bootconsole [ns16550a0] disabled
+[    0.009229] Calibrating delay loop (skipped), value calculated using timer frequency.. 20.00 BogoMIPS (lpj=40000)
+[    0.009332] pid_max: default: 32768 minimum: 301
+[    0.011943] landlock: Up and running.
+[    0.011977] Yama: becoming mindful.
+[    0.015682] AppArmor: AppArmor initialized
+[    0.015725] AppArmor: AppArmor secmark mediation reserved: ready to be enabled
+[    0.018975] Mount-cache hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    0.019026] Mountpoint-cache hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    0.023837] VFS: Finished mounting rootfs on nullfs
+[    0.042626] ASID allocator using 16 bits (65536 entries)
+[    0.043369] rcu: Hierarchical SRCU implementation.
+[    0.043399] rcu: 	Max phase no-delay instances is 1000.
+[    0.044190] Timer migration: 1 hierarchy levels; 8 children per group; 1 crossnode level
+[    0.046598] Remapping and enabling EFI services.
+[    0.048580] smp: Bringing up secondary CPUs ...
+[    0.058507] smp: Brought up 1 node, 4 CPUs
+[    0.061619] Memory: 3872632K/4194304K available (14941K kernel code, 8287K rwdata, 14336K rodata, 7234K init, 1119K bss, 281516K reserved, 32768K cma-reserved)
+[    0.070928] devtmpfs: initialized
+[    0.087376] posixtimers hash table entries: 2048 (order: 3, 32768 bytes, linear)
+[    0.087723] futex hash table entries: 1024 (65536 bytes on 1 NUMA nodes, total 64 KiB, linear).
+[    0.098891] SMBIOS 3.7.0 present.
+[    0.099063] DMI: riscv-virtio qemu/qemu, BIOS 2024.10 10/01/2024
+[    0.099150] DMI: Memory slots populated: 0/0
+[    0.108574] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.118371] DMA: preallocated 512 KiB GFP_KERNEL pool for atomic allocations
+[    0.119344] DMA: preallocated 512 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations
+[    0.119584] audit: initializing netlink subsys (disabled)
+[    0.120953] audit: type=2000 audit(0.112:1): state=initialized audit_enabled=0 res=1
+[    0.123399] thermal_sys: Registered thermal governor 'fair_share'
+[    0.123435] thermal_sys: Registered thermal governor 'bang_bang'
+[    0.123486] thermal_sys: Registered thermal governor 'step_wise'
+[    0.123505] thermal_sys: Registered thermal governor 'user_space'
+[    0.123523] thermal_sys: Registered thermal governor 'power_allocator'
+[    0.124119] cpuidle: using governor ladder
+[    0.124436] cpuidle: using governor menu
+[    0.149438] cpu3: Ratio of byte access time to unaligned word access is 7.55, unaligned accesses are fast
+[    0.149438] cpu1: Ratio of byte access time to unaligned word access is 7.44, unaligned accesses are fast
+[    0.149440] cpu2: Ratio of byte access time to unaligned word access is 7.66, unaligned accesses are fast
+[    0.173737] cpu0: Ratio of byte access time to unaligned word access is 7.85, unaligned accesses are fast
+[    0.193590] HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.193651] HugeTLB: 16380 KiB vmemmap can be freed for a 1.00 GiB page
+[    0.193684] HugeTLB: registered 2.00 MiB page size, pre-allocated 0 pages
+[    0.193702] HugeTLB: 28 KiB vmemmap can be freed for a 2.00 MiB page
+[    0.203833] fbcon: Taking over console
+[    0.204037] ACPI: Interpreter disabled.
+[    0.205385] iommu: Default domain type: Translated
+[    0.205445] iommu: DMA domain TLB invalidation policy: strict mode
+[    0.217988] SCSI subsystem initialized
+[    0.220204] usbcore: registered new interface driver usbfs
+[    0.220439] usbcore: registered new interface driver hub
+[    0.220561] usbcore: registered new device driver usb
+[    0.220985] pps_core: LinuxPPS API ver. 1 registered
+[    0.221013] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <<EMAIL>>
+[    0.221077] PTP clock support registered
+[    0.223329] EDAC MC: Ver: 3.0.0
+[    0.226288] efivars: Registered efivars operations
+[    0.235024] NetLabel: Initializing
+[    0.235064] NetLabel:  domain hash size = 128
+[    0.235113] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+[    0.235710] NetLabel:  unlabeled traffic allowed by default
+[    0.239018] mctp: management component transport protocol core
+[    0.239055] NET: Registered PF_MCTP protocol family
+[    0.240188] vgaarb: loaded
+[    0.242562] clocksource: Switched to clocksource riscv_clocksource
+[    0.246624] VFS: Disk quotas dquot_6.6.0
+[    0.246744] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.251629] AppArmor: AppArmor Filesystem Enabled
+[    0.251937] pnp: PnP ACPI: disabled
+[    0.272802] NET: Registered PF_INET protocol family
+[    0.273758] IP idents hash table entries: 65536 (order: 7, 524288 bytes, linear)
+[    0.317395] tcp_listen_portaddr_hash hash table entries: 2048 (order: 3, 32768 bytes, linear)
+[    0.317520] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.317629] TCP established hash table entries: 32768 (order: 6, 262144 bytes, linear)
+[    0.317923] TCP bind hash table entries: 32768 (order: 8, 1048576 bytes, linear)
+[    0.318173] TCP: Hash tables configured (established 32768 bind 32768)
+[    0.319103] MPTCP token hash table entries: 4096 (order: 5, 98304 bytes, linear)
+[    0.319322] UDP hash table entries: 2048 (order: 5, 131072 bytes, linear)
+[    0.319530] UDP-Lite hash table entries: 2048 (order: 5, 131072 bytes, linear)
+[    0.320532] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.320969] NET: Registered PF_XDP protocol family
+[    0.321093] PCI: CLS 0 bytes, default 64
+[    0.324494] Trying to unpack rootfs image as initramfs...
+[    0.326372] Initialise system trusted keyrings
+[    0.327422] Key type blacklist registered
+[    0.328442] workingset: timestamp_bits=44 max_order=20 bucket_order=0
+[    0.330795] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    0.332352] fuse: init (API version 7.45)
+[    0.334910] integrity: Platform Keyring initialized
+[    0.334998] integrity: Machine keyring initialized
+[    0.368104] Key type asymmetric registered
+[    0.368192] Asymmetric key parser 'x509' registered
+[    0.368442] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 242)
+[    0.369445] io scheduler mq-deadline registered
+[    0.374295] riscv-plic: plic@c000000: mapped 96 interrupts with 4 handlers for 8 contexts.
+[    0.378282] ledtrig-cpu: registered to indicate activity on CPUs
+[    0.379693] pci-host-generic 30000000.pci: host bridge /soc/pci@30000000 ranges:
+[    0.380112] pci-host-generic 30000000.pci:       IO 0x0003000000..0x000300ffff -> 0x0000000000
+[    0.380394] pci-host-generic 30000000.pci:      MEM 0x0040000000..0x007fffffff -> 0x0040000000
+[    0.380442] pci-host-generic 30000000.pci:      MEM 0x0400000000..0x07ffffffff -> 0x0400000000
+[    0.380729] pci-host-generic 30000000.pci: Memory resource size exceeds max for 32 bits
+[    0.380996] pci-host-generic 30000000.pci: ECAM at [mem 0x30000000-0x3fffffff] for [bus 00-ff]
+[    0.381860] pci-host-generic 30000000.pci: PCI host bridge to bus 0000:00
+[    0.382284] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    0.382350] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    0.382383] pci_bus 0000:00: root bus resource [mem 0x40000000-0x7fffffff]
+[    0.382397] pci_bus 0000:00: root bus resource [mem 0x400000000-0x7ffffffff]
+[    0.383234] pci 0000:00:00.0: [1b36:0008] type 00 class 0x060000 conventional PCI endpoint
+[    0.386124] pci 0000:00:01.0: [1af4:1000] type 00 class 0x020000 conventional PCI endpoint
+[    0.386822] pci 0000:00:01.0: BAR 0 [io  0x1000-0x101f]
+[    0.386863] pci 0000:00:01.0: BAR 1 [mem 0x40000000-0x40000fff]
+[    0.386894] pci 0000:00:01.0: BAR 4 [mem 0x40004000-0x40007fff 64bit pref]
+[    0.387190] pci 0000:00:01.0: ROM [mem 0x40080000-0x400fffff pref]
+[    0.387520] pci 0000:00:02.0: [1af4:1001] type 00 class 0x010000 conventional PCI endpoint
+[    0.388156] pci 0000:00:02.0: BAR 0 [io  0x1080-0x10ff]
+[    0.388188] pci 0000:00:02.0: BAR 1 [mem 0x40100000-0x40100fff]
+[    0.388477] pci 0000:00:02.0: BAR 4 [mem 0x40104000-0x40107fff 64bit pref]
+[    0.388794] pci 0000:00:03.0: [1af4:1001] type 00 class 0x010000 conventional PCI endpoint
+[    0.389338] pci 0000:00:03.0: BAR 0 [io  0x1100-0x117f]
+[    0.389369] pci 0000:00:03.0: BAR 1 [mem 0x40108000-0x40108fff]
+[    0.389386] pci 0000:00:03.0: BAR 4 [mem 0x4010c000-0x4010ffff 64bit pref]
+[    0.390962] pci 0000:00:01.0: ROM [mem 0x40000000-0x4007ffff pref]: assigned
+[    0.391115] pci 0000:00:01.0: BAR 4 [mem 0x400000000-0x400003fff 64bit pref]: assigned
+[    0.391630] pci 0000:00:02.0: BAR 4 [mem 0x400004000-0x400007fff 64bit pref]: assigned
+[    0.392054] pci 0000:00:03.0: BAR 4 [mem 0x400008000-0x40000bfff 64bit pref]: assigned
+[    0.392392] pci 0000:00:01.0: BAR 1 [mem 0x40080000-0x40080fff]: assigned
+[    0.392840] pci 0000:00:02.0: BAR 1 [mem 0x40081000-0x40081fff]: assigned
+[    0.393090] pci 0000:00:03.0: BAR 1 [mem 0x40082000-0x40082fff]: assigned
+[    0.393333] pci 0000:00:02.0: BAR 0 [io  0x0080-0x00ff]: assigned
+[    0.393582] pci 0000:00:03.0: BAR 0 [io  0x0100-0x017f]: assigned
+[    0.393818] pci 0000:00:01.0: BAR 0 [io  0x0020-0x003f]: assigned
+[    0.394299] pci_bus 0000:00: resource 4 [io  0x0000-0xffff]
+[    0.394338] pci_bus 0000:00: resource 5 [mem 0x40000000-0x7fffffff]
+[    0.394354] pci_bus 0000:00: resource 6 [mem 0x400000000-0x7ffffffff]
+[    0.402477] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[    0.422247] 10000000.serial: ttyS0 at MMIO 0x10000000 (irq = 15, base_baud = 230400) is a 16550A
+[    0.424063] printk: console [ttyS0] enabled
+[    0.450697] loop: module loaded
+[    0.451548] virtio_blk virtio1: 4/0/0 default/read/poll queues
+[    0.455186] virtio_blk virtio1: [vda] 67108864 512-byte logical blocks (34.4 GB/32.0 GiB)
+[    0.464412] GPT:Primary header thinks Alt. header is not at the end of the disk.
+[    0.464487] GPT:9437183 != 67108863
+[    0.464514] GPT:Alternate GPT header not at the end of the disk.
+[    0.464539] GPT:9437183 != 67108863
+[    0.464557] GPT: Use GNU Parted to correct GPT errors.
+[    0.464928]  vda: vda1 vda12 vda13 vda14 vda15
+[    0.467204] virtio_blk virtio2: 4/0/0 default/read/poll queues
+[    0.468202] virtio_blk virtio2: [vdb] 732 512-byte logical blocks (375 kB/366 KiB)
+[    0.474436] tun: Universal TUN/TAP device driver, 1.6
+[    0.477710] PPP generic driver version 2.4.2
+[    0.480365] mousedev: PS/2 mouse device common for all mice
+[    0.482600] goldfish_rtc 101000.rtc: registered as rtc0
+[    0.482993] goldfish_rtc 101000.rtc: setting system clock to 2026-10-28T04:00:39 UTC (1793160039)
+[    0.483406] i2c_dev: i2c /dev entries driver
+[    0.485390] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+[    0.485524] device-mapper: uevent: version 1.0.3
+[    0.486248] device-mapper: ioctl: 4.50.0-ioctl (2025-04-28) initialised: <EMAIL>
+[    0.486911] EDAC DEVICE0: Giving out device to module Sifive ECC Manager controller sifive_edac.0: DEV sifive_edac.0 (INTERRUPT)
+[    0.487623] riscv-pmu-sbi: SBI PMU extension is available
+[    0.487964] riscv-pmu-sbi: 16 firmware and 18 hardware counters
+[    0.488043] riscv-pmu-sbi: Perf sampling/filtering is not supported as sscof extension is not available
+[    0.490675] drop_monitor: Initializing network drop monitor service
+[    0.491420] NET: Registered PF_INET6 protocol family
+[    0.496468] Segment Routing with IPv6
+[    0.496620] In-situ OAM (IOAM) with IPv6
+[    0.496969] NET: Registered PF_PACKET protocol family
+[    0.497698] Key type dns_resolver registered
+[    0.507311] registered taskstats version 1
+[    0.516122] Loading compiled-in X.509 certificates
+[    0.524015] Loaded X.509 cert 'Build time autogenerated kernel key: 66d94e472c6e1b4f4bd2177fb255c6b0fef04da0'
+[    0.524921] Loaded X.509 cert 'Canonical Ltd. Live Patch Signing 2025 Kmod: d541cef61dc7e793b7eb7e899970a2eef0b5dc8c'
+[    0.525592] Loaded X.509 cert 'Canonical Ltd. Live Patch Signing: 14df34d1a87cf37625abec039ef2bf521249b969'
+[    0.526290] Loaded X.509 cert 'Canonical Ltd. Kernel Module Signing 2025 Kmod: 4627603d2357a2a3f81006370894c221175893e9'
+[    0.526986] Loaded X.509 cert 'Canonical Ltd. Kernel Module Signing: 88f752e560a1e0737e31163a466ad7b70a850c19'
+[    0.527056] blacklist: Loading compiled-in revocation X.509 certificates
+[    0.527243] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing: 61482aa2830d0ab2ad5af10b7250da9033ddcef0'
+[    0.527353] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2017): 242ade75ac4a15e50d50c84b0d45ff3eae707a03'
+[    0.527434] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (ESM 2018): 365188c1d374d6b07c3c8f240f8ef722433d6a8b'
+[    0.527521] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2019): c0746fd6c5da3ae827864651ad66ae47fe24b3e8'
+[    0.527596] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v1): a8d54bbb3825cfb94fa13c9f8a594a195c107b8d'
+[    0.527682] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v2): 4cf046892d6fd3c9a5b03f98d845f90851dc6a8c'
+[    0.527770] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v3): 100437bb6de6e469b581e61cd66bce3ef4ed53af'
+[    0.527842] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (Ubuntu Core 2019): c1d57b8f6b743f23ee41f4f7ee292f06eecadfb9'
+[    0.549020] Demotion targets for Node 0: null
+[    0.550245] Key type .fscrypt registered
+[    0.550298] Key type fscrypt-provisioning registered
+[    0.551067] Key type big_key registered
+[    1.190402] Freeing initrd memory: 74124K
+[    1.441815] Key type encrypted registered
+[    1.441947] AppArmor: AppArmor sha256 policy hashing enabled
+[    1.442256] ima: No TPM chip found, activating TPM-bypass!
+[    1.442369] Loading compiled-in module X.509 certificates
+[    1.443229] Loaded X.509 cert 'Build time autogenerated kernel key: 66d94e472c6e1b4f4bd2177fb255c6b0fef04da0'
+[    1.443320] ima: Allocated hash algorithm: sha256
+[    1.444684] ima: No architecture policies found
+[    1.445139] evm: Initialising EVM extended attributes:
+[    1.445184] evm: security.selinux
+[    1.445219] evm: security.SMACK64
+[    1.445236] evm: security.SMACK64EXEC
+[    1.445252] evm: security.SMACK64TRANSMUTE
+[    1.445268] evm: security.SMACK64MMAP
+[    1.445277] evm: security.apparmor
+[    1.445287] evm: security.ima
+[    1.445297] evm: security.capability
+[    1.445314] evm: HMAC attrs: 0x1
+[    1.453445] clk: Disabling unused clocks
+[    1.453609] PM: genpd: Disabling unused power domains
+[    1.531544] Freeing unused kernel image (initmem) memory: 7232K
+[    1.537898] Checked W+X mappings: passed, no W+X pages found
+[    1.538138] Run /init as init process
+Loading, please wait...
+Starting systemd-udevd version 255.4-1ubuntu8.17
+[    2.459120] virtio_net virtio0 enp0s1: renamed from eth0
+Begin: Loading essential drivers ... [    4.462477] raid6: int64x8  gen()  2072 MB/s
+[    4.530206] raid6: int64x4  gen()  4577 MB/s
+[    4.598038] raid6: int64x2  gen()  5358 MB/s
+[    4.666117] raid6: int64x1  gen()  4571 MB/s
+[    4.666162] raid6: using algorithm int64x2 gen() 5358 MB/s
+[    4.734228] raid6: .... xor() 3276 MB/s, rmw enabled
+[    4.734339] raid6: using intx1 recovery algorithm
+[    4.738753] xor: measuring software checksum speed
+[    4.739449]    8regs           :  5686 MB/sec
+[    4.740018]    32regs          :  6296 MB/sec
+[    4.740065] xor: using function: 32regs (6296 MB/sec)
+[    4.743851] async_tx: api initialized (async)
+done.
+Begin: Running /scripts/init-premount ... done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... [    5.395125] Btrfs loaded, zoned=yes, fsverity=yes
+Scanning for Btrfs filesystems
+done.
+Begin: Will now check root file system ... fsck from util-linux 2.39.3
+[/usr/sbin/fsck.ext4 (1) -- /dev/vda1] fsck.ext4 -a -C0 /dev/vda1 
+cloudimg-rootfs: clean, 100175/575424 files, 731685/1150203 blocks
+done.
+[    5.855421] EXT4-fs (vda1): mounted filesystem d690bc26-9fd8-433f-831e-4c257753b625 ro with ordered data mode. Quota mode: none.
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+[    6.883565] systemd[1]: Inserted module 'autofs4'
+[    6.974515] systemd[1]: systemd 255.4-1ubuntu8.17 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 -PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -BPF_FRAMEWORK -XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified)
+[    6.974693] systemd[1]: Detected virtualization qemu.
+[    6.974828] systemd[1]: Detected architecture riscv64.
+
+Welcome to Ubuntu 24.04.5 LTS!
+
+[    6.979914] systemd[1]: Hostname set to <ubuntu>.
+[    6.989120] systemd[1]: Initializing machine ID from random generator.
+[    6.989933] systemd[1]: Installed transient /etc/machine-id file.
+[   11.850058] systemd[1]: Queued start job for default target graphical.target.
+[   11.922846] systemd[1]: Created slice system-modprobe.slice - Slice /system/modprobe.
+[  OK  ] Created slice system-modprobe.slice - Slice /system/modprobe.
+[   11.927591] systemd[1]: Created slice system-serial\x2dgetty.slice - Slice /system/serial-getty.
+[  OK  ] Created slice system-serial\x2dget…slice - Slice /system/serial-getty.
+[   11.930617] systemd[1]: Created slice system-systemd\x2dfsck.slice - Slice /system/systemd-fsck.
+[  OK  ] Created slice system-systemd\x2dfs…slice - Slice /system/systemd-fsck.
+[   11.932971] systemd[1]: Created slice user.slice - User and Session Slice.
+[  OK  ] Created slice user.slice - User and Session Slice.
+[   11.934894] systemd[1]: Started systemd-ask-password-wall.path - Forward Password Requests to Wall Directory Watch.
+[  OK  ] Started systemd-ask-password-wall.…d Requests to Wall Directory Watch.
+[   11.939019] systemd[1]: Set up automount proc-sys-fs-binfmt_misc.automount - Arbitrary Executable File Formats File System Automount Point.
+[  OK  ] Set up automount proc-sys-fs-binfm…ormats File System Automount Point.
+[   11.940693] systemd[1]: Expecting device dev-disk-by\x2dlabel-UEFI.device - /dev/disk/by-label/UEFI...
+         Expecting device dev-disk-by\x2dla…device - /dev/disk/by-label/UEFI...
+[   11.941814] systemd[1]: Expecting device dev-ttyS0.device - /dev/ttyS0...
+         Expecting device dev-ttyS0.device - /dev/ttyS0...
+[  OK  [[   11.942844] systemd[1]: Reached target integritysetup.target - Local Integrity Protected Volumes.
+0m] Reached target integritysetup.targ… Local Integrity Protected Volumes.
+[  OK  [[   11.943838] systemd[1]: Reached target slices.target - Slice Units.
+0m] Reached target slices.target - Slice Units.
+[  OK  ] Reached target snapd.mounts-pre.tar[   11.944560] systemd[1]: Reached target snapd.mounts-pre.target - Mounting snaps.
+get - Mounting snaps.
+[   11.945253] systemd[1]: Reached target snapd.mounts.target - Mounted snaps.
+[  OK  ] Reached target snapd.mounts.target - Mounted snaps.
+[  OK  [[   11.945773] systemd[1]: Reached target swap.target - Swaps.
+0m] Reached target swap.target - Swaps.
+[   11.946446] systemd[1]: Reached target veritysetup.target - Local Verity Protected Volumes.
+[  OK  ] Reached target veritysetup.target - Local Verity Protected Volumes.
+[   11.948307] systemd[1]: Listening on dm-event.socket - Device-mapper event daemon FIFOs.
+[  OK  ] Listening on dm-event.socket - Device-mapper event daemon FIFOs.
+[   11.949994] systemd[1]: Listening on lvm2-lvmpolld.socket - LVM2 poll daemon socket.
+[  OK  ] Listening on lvm2-lvmpolld.socket - LVM2 poll daemon socket.
+[   11.951371] systemd[1]: Listening on multipathd.socket - multipathd control socket.
+[  OK  ] Listening on multipathd.socket - multipathd control socket.
+[   11.952647] systemd[1]: Listening on syslog.socket - Syslog Socket.
+[  OK  ] Listening on syslog.socket - Syslog Socket.
+[   11.953735] systemd[1]: Listening on systemd-fsckd.socket - fsck to fsckd communication Socket.
+[  OK  ] Listening on systemd-fsckd.socket …fsck to fsckd communication Socket.
+[   11.954874] systemd[1]: Listening on systemd-initctl.socket - initctl Compatibility Named Pipe.
+[  OK  ] Listening on systemd-initctl.socke…- initctl Compatibility Named Pipe.
+[   11.956174] systemd[1]: Listening on systemd-journald-dev-log.socket - Journal Socket (/dev/log).
+[  OK  ] Listening on systemd-journald-dev-…socket - Journal Socket (/dev/log).
+[   11.957362] systemd[1]: Listening on systemd-journald.socket - Journal Socket.
+[  OK  ] Listening on systemd-journald.socket - Journal Socket.
+[   11.958960] systemd[1]: Listening on systemd-networkd.socket - Network Service Netlink Socket.
+[  OK  ] Listening on systemd-networkd.socket - Network Service Netlink Socket.
+[   11.959989] systemd[1]: systemd-pcrextend.socket - TPM2 PCR Extension (Varlink) was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[   11.960957] systemd[1]: Listening on systemd-udevd-control.socket - udev Control Socket.
+[  OK  ] Listening on systemd-udevd-control.socket - udev Control Socket.
+[   11.962064] systemd[1]: Listening on systemd-udevd-kernel.socket - udev Kernel Socket.
+[  OK  ] Listening on systemd-udevd-kernel.socket - udev Kernel Socket.
+[   11.983539] systemd[1]: Mounting dev-hugepages.mount - Huge Pages File System...
+         Mounting dev-hugepages.mount - Huge Pages File System...
+[   11.990065] systemd[1]: Mounting dev-mqueue.mount - POSIX Message Queue File System...
+         Mounting dev-mqueue.mount - POSIX Message Queue File System...
+         Mounting sys-kernel-debug.moun[   11.997828] systemd[1]: Mounting sys-kernel-debug.mount - Kernel Debug File System...
+t - Kernel Debug File System...
+[   12.004934] systemd[1]: Mounting sys-kernel-tracing.mount - Kernel Trace File System...
+         Mounting sys-kernel-tracing.mount - Kernel Trace File System...
+         Startin[   12.048928] systemd[1]: Starting systemd-journald.service - Journal Service...
+g systemd-journald.service - Journal Service...
+[   12.075870] systemd[1]: Starting keyboard-setup.service - Set the console keyboard layout...
+         Starting keyboard-setup.service - Set the console keyboard layout...
+         Starting kmod-static-nodes.service…eate List of Static Device Nodes...
+[   12.091159] systemd[1]: Starting kmod-static-nodes.service - Create List of Static Device Nodes...
+[   12.104459] systemd[1]: Starting lvm2-monitor.service - Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progress polling...
+         Starting lvm2-monitor.service - Mo…ing dmeventd or progress polling...
+[   12.110827] systemd[1]: Starting <EMAIL> - Load Kernel Module configfs...
+         Starting <EMAIL> - Load Kernel Module configfs...
+[   12.123230] systemd[1]: Starting modprobe@dm_mod.service - Load Kernel Module dm_mod...
+         Starting modprobe@dm_mod.service - Load Kernel Module dm_mod...
+[   12.133582] systemd[1]: Starting <EMAIL> - Load Kernel Module drm...
+         Starting <EMAIL> - Load Kernel Module drm...
+[   12.198788] systemd[1]: Starting modprobe@efi_pstore.service - Load Kernel Module efi_pstore...
+         Starting modprobe@efi_pstore.servi… - Load Kernel Module efi_pstore...
+         Starting <EMAIL> - Load Kernel Module fuse...
+[   12.223441] systemd[1]: Starting <EMAIL> - Load Kernel Module fuse...
+[   12.283894] systemd[1]: Starting <EMAIL> - Load Kernel Module loop...
+         Starting <EMAIL> - Load Kernel Module loop...
+[   12.285119] systemd[1]: netplan-ovs-cleanup.service - OpenVSwitch configuration for cleanup was skipped because of an unmet condition check (ConditionFileIsExecutable=/usr/bin/ovs-vsctl).
+[   12.286145] systemd[1]: systemd-fsck-root.service - File System Check on Root Device was skipped because of an unmet condition check (ConditionPathExists=!/run/initramfs/fsck-root).
+[   12.315079] systemd[1]: Starting systemd-modules-load.service - Load Kernel Modules...
+         Starting systemd-modules-load.service - Load Kernel Modules...
+[   12.335596] systemd[1]: systemd-pcrmachine.service - TPM2 PCR Machine ID Measurement was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[   12.342788] systemd-journald[310]: Collecting audit messages is disabled.
+[   12.363317] systemd[1]: Starting systemd-remount-fs.service - Remount Root and Kernel File Systems...
+         Starting systemd-remount-fs.servic…unt Root and Kernel File Systems...
+[   12.372796] systemd[1]: systemd-tpm2-setup-early.service - TPM2 SRK Setup (Early) was skipped because of an unmet condition check (ConditionSecurity=measured-uki).
+[   12.407313] systemd[1]: Starting systemd-udev-trigger.service - Coldplug All udev Devices...
+         Starting systemd-udev-trigger.service - Coldplug All udev Devices...
+[   12.428339] systemd[1]: Mounted dev-hugepages.mount - Huge Pages File System.
+[  OK  ] Mounted dev-hugepages.mount - Huge Pages File System.
+[   12.431802] systemd[1]: Mounted dev-mqueue.mount - POSIX Message Queue File System.
+[  OK  ] Mounted dev-mqueue.mount - POSIX Message Queue File System.
+[   12.434924] systemd[1]: Mounted sys-kernel-debug.mount - Kernel Debug File System.
+[  OK  ] Mounted sys-kernel-debug.mount - Kernel Debug File System.
+[   12.457902] systemd[1]: Mounted sys-kernel-tracing.mount - Kernel Trace File System.
+[  OK  ] Mounted sys-kernel-tracing.mount - Kernel Trace File System.
+[  OK  ] Finished kmod-static-nodes.service…Create List of Static Device Nodes.
+[   12.464220] systemd[1]: Finished kmod-static-nodes.service - Create List of Static Device Nodes.
+[  OK  ] Finished lvm2-monitor.service - Mo…using dmeventd or progress[   12.478850] systemd[1]: Finished lvm2-monitor.service - Monitoring of LVM2 mirrors, snapshots etc. using dmeventd or progress polling.
+ polling.
+[   12.485907] systemd[1]: <EMAIL>: Deactivated successfully.
+[   12.499496] systemd[1]: Finished <EMAIL> - Load Kernel Module configfs.
+[  OK  ] Finished <EMAIL> - Load Kernel Module configfs.
+[   12.503149] systemd[1]: Started systemd-journald.service - Journal Service.
+[  OK  ] Started systemd-journald.service - Journal Service.
+[  OK  ] Finished modprobe@dm_mod.service - Load Kernel Module dm_mod.
+[  OK  ] Finished <EMAIL> - Load Kernel Module drm.
+[  OK  ] Finished modprobe@efi_pstore.service - Load Kernel Module efi_pstore.
+[  OK  ] Finished <EMAIL> - Load Kernel Module fuse.
+[  OK  ] Finished <EMAIL> - Load Kernel Module loop.
+         Mounting sys-fs-fuse-connections.mount - FUSE Control File System...
+         Mounting sys-kernel-config.mount - Kernel Configuration File System...
+[   12.626281] EXT4-fs (vda1): re-mounted d690bc26-9fd8-433f-831e-4c257753b625 r/w.
+         Starting systemd-tmpfiles-setup-de… Device Nodes in /dev gracefully...
+[  OK  ] Finished systemd-modules-load.service - Load Kernel Modules.
+[  OK  ] Finished systemd-remount-fs.servic…mount Root and Kernel File Systems.
+         Starting cloud-init-local.service …-init: Local Stage (pre-network)...
+         Starting multipathd.service - Devi…pper Multipath Device Controller...
+         Starting systemd-journal-flush.ser…sh Journal to Persistent Storage...
+         Starting systemd-random-seed.service - Load/Save OS Random Seed...
+         Starting systemd-sysctl.service - Apply Kernel Variables...
+[  OK  ] Finished keyboard-setup.service - Set the console keyboard layout.
+[  OK  ] Mounted sys-fs-fuse-connections.mount - FUSE Control File System.
+[  OK  ] Mounted sys-kernel-config.mount - Kernel Configuration File System.
+[  OK  ] Finished systemd-tmpfiles-setup-de…ic Device Nodes in /dev gracefully.
+[   12.966244] systemd-journald[310]: Received client request to flush runtime journal.
+         Starting systemd-sysusers.service - Create System Users...
+[  OK  ] Finished systemd-udev-trigger.service - Coldplug All udev Devices.
+[  OK  ] Finished systemd-random-seed.service - Load/Save OS Random Seed.
+[  OK  ] Finished systemd-journal-flush.ser…lush Journal to Persistent Storage.
+[  OK  ] Finished systemd-sysctl.service - Apply Kernel Variables.
+[  OK  ] Started multipathd.service - Devic…Mapper Multipath Device Controller.
+[  OK  ] Finished systemd-sysusers.service - Create System Users.
+         Starting systemd-tmpfiles-setup-de…eate Static Device Nodes in /dev...
+[  OK  ] Finished systemd-tmpfiles-setup-de…Create Static Device Nodes in /dev.
+[  OK  ] Reached target local-fs-pre.target…Preparation for Local File Systems.
+         Starting systemd-udevd.service - R…ager for Device Events and Files...
+[  OK  ] Started systemd-udevd.service - Ru…anager for Device Events and Files.
+[  OK  ] Started systemd-ask-password-conso…equests to Console Directory Watch.
+[  OK  ] Reached target cryptsetup.target - Local Encrypted Volumes.
+[  OK  ] Found device dev-ttyS0.device - /dev/ttyS0.
+[  OK  ] Found device dev-disk-by\x2dlabel-…I.device - /dev/disk/by-label/UEFI.
+         Starting systemd-fsck@dev-disk-by\…Check on /dev/disk/by-label/UEFI...
+[  OK  ] Started systemd-fsckd.service - Fi…stem Check Daemon to report status.
+[  OK  ] Finished systemd-fsck@dev-disk-by\…m Check on /dev/disk/by-label/UEFI.
+         Mounting boot-efi.mount - /boot/efi...
+[  OK  ] Listening on systemd-rfkill.socket…ll Switch Status /dev/rfkill Watch.
+[  OK  ] Mounted boot-efi.mount - /boot/efi.
+[  OK  ] Reached target local-fs.target - Local File Systems.
+[  OK  ] Listening on systemd-sysext.socket…tension Image Management (Varlink).
+         Starting apparmor.service - Load AppArmor profiles...
+         Starting console-setup.service - Set console font and keymap...
+         Starting finalrd.service - Create …time dir for shutdown pivot root...
+         Starting ldconfig.service - Rebuild Dynamic Linker Cache...
+         Starting plymouth-read-write.servi…ymouth To Write Out Runtime Data...
+         Starting systemd-binfmt.service - Set Up Additional Binary Formats...
+         Starting systemd-tmpfiles-setup.se…e Volatile Files and Directories...
+         Starting ufw.service - Uncomplicated firewall...
+[  OK  ] Finished console-setup.service - Set console font and keymap.
+[  OK  ] Finished finalrd.service - Create …untime dir for shutdown pivot root.
+[  OK  ] Finished plymouth-read-write.servi…Plymouth To Write Out Runtime Data.
+[  OK  ] Finished ufw.service - Uncomplicated firewall.
+         Mounting proc-sys-fs-binfmt_misc.m…cutable File Formats File System...
+[  OK  ] Finished systemd-tmpfiles-setup.se…ate Volatile Files and Directories.
+[  OK  ] Mounted proc-sys-fs-binfmt_misc.mo…xecutable File Formats File System.
+[  OK  ] Finished systemd-binfmt.service - Set Up Additional Binary Formats.
+         Starting systemd-journal-catalog-u…ervice - Rebuild Journal Catalog...
+         Starting systemd-machine-id-commit…t a transient machine-id on disk...
+         Starting systemd-resolved.service - Network Name Resolution...
+         Starting systemd-timesyncd.service - Network Time Synchronization...
+         Starting systemd-update-utmp.servi…ord System Boot/Shutdown in UTMP...
+[  OK  ] Finished systemd-journal-catalog-u….service - Rebuild Journal Catalog.
+[  OK  ] Finished ldconfig.service - Rebuild Dynamic Linker Cache.
+         Starting systemd-update-done.service - Update is Completed...
+[  OK  ] Finished systemd-machine-id-commit…mit a transient machine-id on disk.
+[  OK  ] Finished systemd-update-utmp.servi…ecord System Boot/Shutdown in UTMP.
+[  OK  ] Finished systemd-update-done.service - Update is Completed.
+[  OK  ] Started systemd-timesyncd.service - Network Time Synchronization.
+[  OK  ] Reached target time-set.target - System Time Set.
+[   16.870652] cloud-init[579]: Cloud-init v. 26.1-0ubuntu1~24.04.1 running 'init-local' at Wed, 28 Oct 2026 04:00:55 +0000. Up 16.66 seconds.
+[  OK  ] Started systemd-resolved.service - Network Name Resolution.
+[  OK  ] Reached target nss-lookup.target - Host and Network Name Lookups.
+[  OK  ] Finished apparmor.service - Load AppArmor profiles.
+         Starting snapd.apparmor.service - …iles managed internally by snapd...
+[  OK  ] Finished snapd.apparmor.service - …ofiles managed internally by snapd.
+[  OK  ] Finished cloud-init-local.service …ud-init: Local Stage (pre-network).
+[  OK  ] Reached target network-pre.target - Preparation for Network.
+         Starting systemd-networkd.service - Network Configuration...
+[  OK  ] Started systemd-networkd.service - Network Configuration.
+         Starting cloud-init.service - Cloud-init: Network Stage...
+[   24.506721] cloud-init[684]: Cloud-init v. 26.1-0ubuntu1~24.04.1 running 'init' at Wed, 28 Oct 2026 04:01:03 +0000. Up 24.39 seconds.
+[   24.614583] cloud-init[684]: ci-info: ++++++++++++++++++++++++++++++++++++++Net device info++++++++++++++++++++++++++++++++++++++
+[   24.615917] cloud-init[684]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
+[   24.616814] cloud-init[684]: ci-info: | Device |  Up  |          Address           |      Mask     | Scope  |     Hw-Address    |
+[   24.617625] cloud-init[684]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
+[   24.618456] cloud-init[684]: ci-info: | enp0s1 | True |         <IPV4>          | <IPV4> | global | <MAC> |
+[   24.619199] cloud-init[684]: ci-info: | enp0s1 | True | fe80::5054:ff:fe12:3456/64 |       .       |  link  | <MAC> |
+[   24.619727] cloud-init[684]: ci-info: |   lo   | True |         <IPV4>          |   <IPV4>   |  host  |         .         |
+[   24.620401] cloud-init[684]: ci-info: |   lo   | True |          ::1/128           |       .       |  host  |         .         |
+[   24.621057] cloud-init[684]: ci-info: +--------+------+----------------------------+---------------+--------+-------------------+
+[   24.621651] cloud-init[684]: ci-info: ++++++++++++++++++++++++++++Route IPv4 info+++++++++++++++++++++++++++++
+[   24.622227] cloud-init[684]: ci-info: +-------+-------------+----------+-----------------+-----------+-------+
+[   24.622726] cloud-init[684]: ci-info: | Route | Destination | Gateway  |     Genmask     | Interface | Flags |
+[   24.623353] cloud-init[684]: ci-info: +-------+-------------+----------+-----------------+-----------+-------+
+[   24.623911] cloud-init[684]: ci-info: |   0   |   <IPV4>   | <IPV4> |     <IPV4>     |   enp0s1  |   UG  |
+[   24.624600] cloud-init[684]: ci-info: |   1   |   <IPV4>  | <IPV4>  |  <IPV4>  |   enp0s1  |   U   |
+[   24.625168] cloud-init[684]: ci-info: |   2   |   <IPV4>  | <IPV4>  | <IPV4> |   enp0s1  |   UH  |
+[   24.625755] cloud-init[684]: ci-info: |   3   |   <IPV4>  | <IPV4>  | <IPV4> |   enp0s1  |   UH  |
+[   24.626314] cloud-init[684]: ci-info: +-------+-------------+----------+-----------------+-----------+-------+
+[   24.626800] cloud-init[684]: ci-info: +++++++++++++++++++Route IPv6 info+++++++++++++++++++
+[   24.627319] cloud-init[684]: ci-info: +-------+-------------+---------+-----------+-------+
+[   24.627916] cloud-init[684]: ci-info: | Route | Destination | Gateway | Interface | Flags |
+[   24.628525] cloud-init[684]: ci-info: +-------+-------------+---------+-----------+-------+
+[   24.629091] cloud-init[684]: ci-info: |   0   |  fe80::/64  |    ::   |   enp0s1  |   U   |
+[   24.629689] cloud-init[684]: ci-info: |   2   |    local    |    ::   |   enp0s1  |   U   |
+[   24.630407] cloud-init[684]: ci-info: |   3   |  multicast  |    ::   |   enp0s1  |   U   |
+[   24.631000] cloud-init[684]: ci-info: +-------+-------------+---------+-----------+-------+
+[   32.850770] cloud-init[684]: Generating public/private rsa key pair.
+[   32.852133] cloud-init[684]: Your identification has been saved in /etc/ssh/ssh_host_rsa_key
+[   32.852821] cloud-init[684]: Your public key has been saved in /etc/ssh/ssh_host_rsa_key.pub
+[   32.853330] cloud-init[684]: The key fingerprint is:
+[   32.853723] cloud-init[684]: SHA256:ie1y+qb1JxF3bbmqOQD3t/otvtmcJxyzVFSmBQv3zog root@lattice-guest
+[   32.854236] cloud-init[684]: The key's randomart image is:
+[   32.854764] cloud-init[684]: +---[RSA 3072]----+
+[   32.855351] cloud-init[684]: |            . o.=|
+[   32.855867] cloud-init[684]: |             o *.|
+[   32.856759] cloud-init[684]: |              ooo|
+[   32.857307] cloud-init[684]: |       + o. ...=+|
+[   32.857814] cloud-init[684]: |      . S .oE..o+|
+[   32.858310] cloud-init[684]: |       . ... .+. |
+[   32.858848] cloud-init[684]: |      . + ...oo+ |
+[   32.859340] cloud-init[684]: |       =....o+O o|
+[   32.859830] cloud-init[684]: |      o+. .**=o*.|
+[   32.860446] cloud-init[684]: +----[SHA256]-----+
+[   32.860935] cloud-init[684]: Generating public/private ecdsa key pair.
+[   32.861375] cloud-init[684]: Your identification has been saved in /etc/ssh/ssh_host_ecdsa_key
+[   32.861875] cloud-init[684]: Your public key has been saved in /etc/ssh/ssh_host_ecdsa_key.pub
+[   32.862416] cloud-init[684]: The key fingerprint is:
+[   32.862837] cloud-init[684]: SHA256:oKxXZpAvMIEnO8SiWXlnzkgenjnVyEwdntZu6pAzTEY root@lattice-guest
+[   32.863263] cloud-init[684]: The key's randomart image is:
+[   32.863628] cloud-init[684]: +---[ECDSA 256]---+
+[   32.864100] cloud-init[684]: |.... +.+..       |
+[   32.864621] cloud-init[684]: |+o+.+.B.oo       |
+[   32.865149] cloud-init[684]: |+*o=o@E + .      |
+[   32.865560] cloud-init[684]: |=  +B=oo .       |
+[   32.865924] cloud-init[684]: | .  +.B S o      |
+[   32.866394] cloud-init[684]: |   . O . o       |
+[   32.866885] cloud-init[684]: |  . . * .        |
+[   32.867365] cloud-init[684]: |   .   =         |
+[   32.867868] cloud-init[684]: |        .        |
+[   32.868404] cloud-init[684]: +----[SHA256]-----+
+[   32.868814] cloud-init[684]: Generating public/private ed25519 key pair.
+[   32.869273] cloud-init[684]: Your identification has been saved in /etc/ssh/ssh_host_ed25519_key
+[   32.869811] cloud-init[684]: Your public key has been saved in /etc/ssh/ssh_host_ed25519_key.pub
+[   32.870365] cloud-init[684]: The key fingerprint is:
+[   32.870777] cloud-init[684]: SHA256:JgzR2ZxzYCcwH6vTAzcCCFmrdgPjHqZs+j21TX+BiGs root@lattice-guest
+[   32.871268] cloud-init[684]: The key's randomart image is:
+[   32.871691] cloud-init[684]: +--[ED25519 256]--+
+[   32.872210] cloud-init[684]: |.+..o.o==o.      |
+[   32.872863] cloud-init[684]: |. .. oo+==.      |
+[   32.873356] cloud-init[684]: | o. . o =o       |
+[   32.873841] cloud-init[684]: |..o  o * .       |
+[   32.874326] cloud-init[684]: |.= o  =.S. .     |
+[   32.874813] cloud-init[684]: |* o . o+o.. .    |
+[   32.875291] cloud-init[684]: |.+   . = .   .   |
+[   32.875701] cloud-init[684]: |o  .. E . . .    |
+[   32.876185] cloud-init[684]: |... .o     .     |
+[   32.876692] cloud-init[684]: +----[SHA256]-----+
+[  OK  ] Finished cloud-init.service - Cloud-init: Network Stage.
+[  OK  ] Reached target cloud-config.target - Cloud-config availability.
+[  OK  ] Reached target sysinit.target - System Initialization.
+[  OK  ] Started apt-daily.timer - Daily apt download activities.
+[  OK  ] Started apt-daily-upgrade.timer - …y apt upgrade and clean activities.
+[  OK  ] Started dpkg-db-backup.timer - Daily dpkg database backup timer.
+[  OK  ] Started e2scrub_all.timer - Period…Metadata Check for All Filesystems.
+[  OK  ] Started fstrim.timer - Discard unused filesystem blocks once a week.
+[  OK  ] Started fwupd-refresh.timer - Refresh fwupd metadata regularly.
+[  OK  ] Started logrotate.timer - Daily rotation of log files.
+[  OK  ] Started man-db.timer - Daily man-db regeneration.
+[  OK  ] Started motd-news.timer - Message of the Day.
+[  OK  ] Started sysstat-collect.timer - Ru…y accounting tool every 10 minutes.
+[  OK  ] Started sysstat-summary.timer - Ge… of yesterday's process accounting.
+[  OK  ] Started systemd-tmpfiles-clean.tim…y Cleanup of Temporary Directories.
+[  OK  ] Reached target paths.target - Path Units.
+[  OK  ] Listening on cloud-init-hotplugd.s…t - cloud-init hotplug hook socket.
+[  OK  ] Listening on dbus.socket - D-Bus System Message Bus Socket.
+[  OK  ] Listening on iscsid.socket - Open-iSCSI iscsid Socket.
+         Starting lxd-installer.socket - He…er to install lxd snap on demand...
+         Starting snapd.socket - Socket activation for snappy daemon...
+[  OK  ] Listening on ssh.socket - OpenBSD Secure Shell server socket.
+[  OK  ] Listening on uuidd.socket - UUID daemon activation socket.
+[  OK  ] Listening on lxd-installer.socket …lper to install lxd snap on demand.
+[  OK  ] Listening on snapd.socket - Socket activation for snappy daemon.
+[  OK  ] Reached target sockets.target - Socket Units.
+[  OK  ] Reached target basic.target - Basic System.
+         Starting dbus.service - D-Bus System Message Bus...
+[  OK  ] Started dmesg.service - Save initial kernel messages after boot.
+         Starting e2scrub_reap.service - Re…ne ext4 Metadata Check Snapshots...
+         Starting grub-common.service - Record successful boot for GRUB...
+         Starting polkit.service - Authorization Manager...
+         Starting rsyslog.service - System Logging Service...
+[  OK  ] Reached target getty-pre.target - Preparation for Logins.
+         Starting snapd.seeded.service - Wait until snapd is fully seeded...
+         Starting snapd.service - Snap Daemon...
+         Starting sysstat.service - Resets System Activity Logs...
+         Starting systemd-logind.service - User Login Management...
+         Starting udisks2.service - Disk Manager...
+[  OK  ] Started dbus.service - D-Bus System Message Bus.
+[  OK  ] Finished e2scrub_reap.service - Re…line ext4 Metadata Check Snapshots.
+[  OK  ] Finished sysstat.service - Resets System Activity Logs.
+         Starting wpa_supplicant.service - WPA supplicant...
+[  OK  ] Started systemd-logind.service - User Login Management.
+[  OK  ] Started wpa_supplicant.service - WPA supplicant.
+[  OK  ] Reached target network.target - Network.
+[  OK  ] Reached target network-online.target - Network is Online.
+[  OK  ] Started update-notifier-download.t…hat failed at package install time.
+[  OK  ] Started update-notifier-motd.timer… a new version of Ubuntu available.
+[  OK  ] Reached target timers.target - Timer Units.
+         Starting cloud-config.service - Cloud-init: Config Stage...
+[  OK  ] Reached target remote-fs-pre.targe…reparation for Remote File Systems.
+[  OK  ] Reached target remote-fs.target - Remote File Systems.
+         Starting apport.service - automatic crash report generation...
+[  OK  ] Finished blk-availability.service - Availability of block devices.
+[  OK  ] Started cron.service - Regular background program processing daemon.
+         Starting pollinate.service - Polli…e pseudo random number generator...
+         Starting systemd-user-sessions.service - Permit User Sessions...
+[  OK  ] Started unattended-upgrades.service - Unattended Upgrades Shutdown.
+[  OK  ] Finished grub-common.service - Record successful boot for GRUB.
+[  OK  ] Started polkit.service - Authorization Manager.
+         Starting ModemManager.service - Modem Manager...
+         Starting grub-initrd-fallback.service - GRUB failed boot detection...
+[  OK  ] Started rsyslog.service - System Logging Service.
+[  OK  ] Finished systemd-user-sessions.service - Permit User Sessions.
+         Starting plymouth-quit-wait.servic…d until boot process finishes up...
+         Starting plymouth-quit.service - Terminate Plymouth Boot Screen...
+[  OK  ] Started udisks2.service - Disk Manager.
+[  OK  ] Finished plymouth-quit-wait.servic…old until boot process finishes up.
+[  OK  ] Started <EMAIL> - Serial Getty on ttyS0.
+         Starting setvtrgb.service - Set console scheme...
+[  OK  ] Finished plymouth-quit.service - Terminate Plymouth Boot Screen.
+[  OK  ] Finished grub-initrd-fallback.service - GRUB failed boot detection.
+[  OK  ] Finished setvtrgb.service - Set console scheme.
+[  OK  ] Created slice system-getty.slice - Slice /system/getty.
+[  OK  ] Started <EMAIL> - Getty on tty1.
+[  OK  ] Reached target getty.target - Login Prompts.
+[  OK  ] Started ModemManager.service - Modem Manager.
+[  OK  ] Finished apport.service - automatic crash report generation.
+[  OK  ] Started snapd.service - Snap Daemon.
+         Starting systemd-timedated.service - Time & Date Service...
+[  OK  ] Finished pollinate.service - Polli…the pseudo random number generator.
+[   37.634664] cloud-init[991]: Cloud-init v. 26.1-0ubuntu1~24.04.1 running 'modules:config' at Wed, 28 Oct 2026 04:01:16 +0000. Up 37.38 seconds.
+[  OK  ] Started systemd-timedated.service - Time & Date Service.
+
+Ubuntu 24.04.5 LTS lattice-guest ttyS0
+
+lattice-guest login: [   42.003719] cloud-init[1028]: Cloud-init v. 26.1-0ubuntu1~24.04.1 running 'modules:final' at Wed, 28 Oct 2026 04:01:20 +0000. Up 41.76 seconds.
+[   43.192014] cloud-init[1028]: Hit:1 http://ports.ubuntu.com/ubuntu-ports noble InRelease
+[   43.296108] cloud-init[1028]: Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates InRelease [126 kB]
+[   44.041169] cloud-init[1028]: Get:3 http://ports.ubuntu.com/ubuntu-ports noble-backports InRelease [126 kB]
+[   44.345771] cloud-init[1028]: Get:4 http://ports.ubuntu.com/ubuntu-ports noble-security InRelease [126 kB]
+[   44.635046] cloud-init[1028]: Get:5 http://ports.ubuntu.com/ubuntu-ports noble/universe riscv64 Packages [14.3 MB]
+[   46.116511] cloud-init[1028]: Get:6 http://ports.ubuntu.com/ubuntu-ports noble/universe Translation-en [5982 kB]
+[   46.173476] cloud-init[1028]: Get:7 http://ports.ubuntu.com/ubuntu-ports noble/universe riscv64 Components [3415 kB]
+[   46.303485] cloud-init[1028]: Get:8 http://ports.ubuntu.com/ubuntu-ports noble/universe riscv64 c-n-f Metadata [277 kB]
+[   46.313219] cloud-init[1028]: Get:9 http://ports.ubuntu.com/ubuntu-ports noble/multiverse riscv64 Packages [168 kB]
+[   46.319334] cloud-init[1028]: Get:10 http://ports.ubuntu.com/ubuntu-ports noble/multiverse Translation-en [118 kB]
+[   46.325574] cloud-init[1028]: Get:11 http://ports.ubuntu.com/ubuntu-ports noble/multiverse riscv64 Components [30.5 kB]
+[   46.326415] cloud-init[1028]: Get:12 http://ports.ubuntu.com/ubuntu-ports noble/multiverse riscv64 c-n-f Metadata [6020 B]
+[   46.425632] cloud-init[1028]: Get:13 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 Packages [725 kB]
+[   46.451919] cloud-init[1028]: Get:14 http://ports.ubuntu.com/ubuntu-ports noble-updates/main Translation-en [310 kB]
+[   46.484739] cloud-init[1028]: Get:15 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 Components [178 kB]
+[   46.500122] cloud-init[1028]: Get:16 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe riscv64 Packages [1290 kB]
+[   46.544689] cloud-init[1028]: Get:17 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe Translation-en [343 kB]
+[   46.565930] cloud-init[1028]: Get:18 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe riscv64 Components [333 kB]
+[   46.585215] cloud-init[1028]: Get:19 http://ports.ubuntu.com/ubuntu-ports noble-updates/universe riscv64 c-n-f Metadata [24.8 kB]
+[   46.593029] cloud-init[1028]: Get:20 http://ports.ubuntu.com/ubuntu-ports noble-updates/restricted riscv64 Packages [12.1 kB]
+[   46.600140] cloud-init[1028]: Get:21 http://ports.ubuntu.com/ubuntu-ports noble-updates/restricted Translation-en [411 kB]
+[   46.613009] cloud-init[1028]: Get:22 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse riscv64 Packages [4696 B]
+[   46.633567] cloud-init[1028]: Get:23 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse Translation-en [14.3 kB]
+[   46.674874] cloud-init[1028]: Get:24 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse riscv64 Components [212 B]
+[   46.691303] cloud-init[1028]: Get:25 http://ports.ubuntu.com/ubuntu-ports noble-updates/multiverse riscv64 c-n-f Metadata [188 B]
+[   46.729006] cloud-init[1028]: Get:26 http://ports.ubuntu.com/ubuntu-ports noble-backports/main riscv64 Packages [40.7 kB]
+[   46.752092] cloud-init[1028]: Get:27 http://ports.ubuntu.com/ubuntu-ports noble-backports/main Translation-en [9172 B]
+[   46.764626] cloud-init[1028]: Get:28 http://ports.ubuntu.com/ubuntu-ports noble-backports/main riscv64 Components [3568 B]
+[   46.768447] cloud-init[1028]: Get:29 http://ports.ubuntu.com/ubuntu-ports noble-backports/main riscv64 c-n-f Metadata [372 B]
+[   46.779148] cloud-init[1028]: Get:30 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe riscv64 Packages [25.8 kB]
+[   46.804466] cloud-init[1028]: Get:31 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe Translation-en [18.6 kB]
+[   46.811189] cloud-init[1028]: Get:32 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe riscv64 Components [11.6 kB]
+[   46.818089] cloud-init[1028]: Get:33 http://ports.ubuntu.com/ubuntu-ports noble-backports/universe riscv64 c-n-f Metadata [1536 B]
+[   46.855562] cloud-init[1028]: Get:34 http://ports.ubuntu.com/ubuntu-ports noble-backports/restricted riscv64 Components [216 B]
+[   46.876264] cloud-init[1028]: Get:35 http://ports.ubuntu.com/ubuntu-ports noble-backports/restricted riscv64 c-n-f Metadata [120 B]
+[   46.904107] cloud-init[1028]: Get:36 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse riscv64 Packages [748 B]
+[   46.929498] cloud-init[1028]: Get:37 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse Translation-en [340 B]
+[   46.942062] cloud-init[1028]: Get:38 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse riscv64 Components [212 B]
+[   46.944903] cloud-init[1028]: Get:39 http://ports.ubuntu.com/ubuntu-ports noble-backports/multiverse riscv64 c-n-f Metadata [120 B]
+[   47.242485] cloud-init[1028]: Get:40 http://ports.ubuntu.com/ubuntu-ports noble-security/main riscv64 Packages [493 kB]
+[   47.607411] cloud-init[1028]: Get:41 http://ports.ubuntu.com/ubuntu-ports noble-security/main Translation-en [231 kB]
+[   47.621191] cloud-init[1028]: Get:42 http://ports.ubuntu.com/ubuntu-ports noble-security/main riscv64 Components [43.3 kB]
+[   47.624910] cloud-init[1028]: Get:43 http://ports.ubuntu.com/ubuntu-ports noble-security/universe riscv64 Packages [937 kB]
+[   47.665194] cloud-init[1028]: Get:44 http://ports.ubuntu.com/ubuntu-ports noble-security/universe Translation-en [246 kB]
+[   47.677268] cloud-init[1028]: Get:45 http://ports.ubuntu.com/ubuntu-ports noble-security/universe riscv64 Components [76.3 kB]
+[   47.681447] cloud-init[1028]: Get:46 http://ports.ubuntu.com/ubuntu-ports noble-security/universe riscv64 c-n-f Metadata [16.6 kB]
+[   47.683509] cloud-init[1028]: Get:47 http://ports.ubuntu.com/ubuntu-ports noble-security/restricted riscv64 Packages [9980 B]
+[   47.688597] cloud-init[1028]: Get:48 http://ports.ubuntu.com/ubuntu-ports noble-security/restricted Translation-en [392 kB]
+[   47.699635] cloud-init[1028]: Get:49 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse riscv64 Packages [3312 B]
+[   47.700761] cloud-init[1028]: Get:50 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse Translation-en [12.1 kB]
+[   47.804779] cloud-init[1028]: Get:51 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse riscv64 Components [208 B]
+[   47.810128] cloud-init[1028]: Get:52 http://ports.ubuntu.com/ubuntu-ports noble-security/multiverse riscv64 c-n-f Metadata [116 B]
+[   88.614026] cloud-init[1028]: Fetched 30.9 MB in 16s (1973 kB/s)
+[   92.805183] cloud-init[1028]: Reading package lists...
+[   93.821851] cloud-init[1028]: Reading package lists...
+[   94.365149] cloud-init[1028]: Building dependency tree...
+[   94.367990] cloud-init[1028]: Reading state information...
+[   94.786150] cloud-init[1028]: The following additional packages will be installed:
+[   94.789886] cloud-init[1028]:   binutils binutils-common binutils-riscv64-linux-gnu bzip2 cpp cpp-13
+[   94.791193] cloud-init[1028]:   cpp-13-riscv64-linux-gnu cpp-riscv64-linux-gnu dpkg-dev fakeroot g++ g++-13
+[   94.793033] cloud-init[1028]:   g++-13-riscv64-linux-gnu g++-riscv64-linux-gnu gcc gcc-13 gcc-13-base
+[   94.793683] cloud-init[1028]:   gcc-13-riscv64-linux-gnu gcc-riscv64-linux-gnu git-man
+[   94.794181] cloud-init[1028]:   libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+[   94.794786] cloud-init[1028]:   libasan8 libbinutils libcc1-0 libctf-nobfd0 libctf0 libdpkg-perl libfakeroot
+[   94.795499] cloud-init[1028]:   libfile-fcntllock-perl libgcc-13-dev libgomp1 libisl23 libitm1 libmpc3
+[   94.796303] cloud-init[1028]:   libsframe1 libstdc++-13-dev libubsan1 lto-disabled-list make
+[   94.796896] cloud-init[1028]: Suggested packages:
+[   94.797418] cloud-init[1028]:   binutils-doc gprofng-gui bzip2-doc cpp-doc gcc-13-locales cpp-13-doc
+[   94.797887] cloud-init[1028]:   debian-keyring gcc-13-doc gcc-multilib autoconf automake libtool flex bison
+[   94.798421] cloud-init[1028]:   gdb gcc-doc gdb-riscv64-linux-gnu git-daemon-run | git-daemon-sysvinit
+[   94.798913] cloud-init[1028]:   git-doc git-email git-gui gitk gitweb git-cvs git-mediawiki git-svn bzr
+[   94.799483] cloud-init[1028]:   libstdc++-13-doc make-doc
+[   95.004437] cloud-init[1028]: The following NEW packages will be installed:
+[   95.006027] cloud-init[1028]:   binutils binutils-common binutils-riscv64-linux-gnu build-essential bzip2
+[   95.006795] cloud-init[1028]:   cpp cpp-13 cpp-13-riscv64-linux-gnu cpp-riscv64-linux-gnu dpkg-dev fakeroot
+[   95.007504] cloud-init[1028]:   g++ g++-13 g++-13-riscv64-linux-gnu g++-riscv64-linux-gnu gcc gcc-13
+[   95.008284] cloud-init[1028]:   gcc-13-base gcc-13-riscv64-linux-gnu gcc-riscv64-linux-gnu
+[   95.008992] cloud-init[1028]:   libalgorithm-diff-perl libalgorithm-diff-xs-perl libalgorithm-merge-perl
+[   95.009421] cloud-init[1028]:   libasan8 libbinutils libcc1-0 libctf-nobfd0 libctf0 libdpkg-perl libfakeroot
+[   95.009937] cloud-init[1028]:   libfile-fcntllock-perl libgcc-13-dev libgomp1 libisl23 libitm1 libmpc3
+[   95.010425] cloud-init[1028]:   libsframe1 libstdc++-13-dev libubsan1 lto-disabled-list make
+[   95.010778] cloud-init[1028]: The following packages will be upgraded:
+[   95.011258] cloud-init[1028]:   git git-man
+[   95.573309] cloud-init[1028]: 2 upgraded, 41 newly installed, 0 to remove and 107 not upgraded.
+[   95.575625] cloud-init[1028]: Need to get 68.5 MB of archives.
+[   95.577645] cloud-init[1028]: After this operation, 232 MB of additional disk space will be used.
+[   95.578627] cloud-init[1028]: Get:1 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 binutils-common riscv64 2.42-4ubuntu2.10 [210 kB]
+[   96.534989] cloud-init[1028]: Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libsframe1 riscv64 2.42-4ubuntu2.10 [17.4 kB]
+[   96.540793] cloud-init[1028]: Get:3 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libbinutils riscv64 2.42-4ubuntu2.10 [575 kB]
+[   96.905817] cloud-init[1028]: Get:4 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libctf-nobfd0 riscv64 2.42-4ubuntu2.10 [110 kB]
+[   96.934963] cloud-init[1028]: Get:5 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libctf0 riscv64 2.42-4ubuntu2.10 [107 kB]
+[   96.965195] cloud-init[1028]: Get:6 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 binutils-riscv64-linux-gnu riscv64 2.42-4ubuntu2.10 [918 kB]
+[   97.159435] cloud-init[1028]: Get:7 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 binutils riscv64 2.42-4ubuntu2.10 [2994 B]
+[   97.162392] cloud-init[1028]: Get:8 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 gcc-13-base riscv64 13.3.0-6ubuntu2~24.04.1 [51.6 kB]
+[   97.167615] cloud-init[1028]: Get:9 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libisl23 riscv64 0.26-3build1.1 [719 kB]
+[   97.248406] cloud-init[1028]: Get:10 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libmpc3 riscv64 1.3.1-1build1.1 [59.7 kB]
+[   97.255860] cloud-init[1028]: Get:11 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 cpp-13-riscv64-linux-gnu riscv64 13.3.0-6ubuntu2~24.04.1 [10.5 MB]
+[   97.716395] cloud-init[1028]: Get:12 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 cpp-13 riscv64 13.3.0-6ubuntu2~24.04.1 [1038 B]
+[   97.718716] cloud-init[1028]: Get:13 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 cpp-riscv64-linux-gnu riscv64 4:13.2.0-7ubuntu1 [5316 B]
+[   97.719773] cloud-init[1028]: Get:14 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 cpp riscv64 4:13.2.0-7ubuntu1 [22.4 kB]
+[   97.720879] cloud-init[1028]: Get:15 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libcc1-0 riscv64 14.2.0-4ubuntu2~24.04.1 [46.6 kB]
+[   97.721902] cloud-init[1028]: Get:16 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libgomp1 riscv64 14.2.0-4ubuntu2~24.04.1 [149 kB]
+[   97.728733] cloud-init[1028]: Get:17 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libitm1 riscv64 14.2.0-4ubuntu2~24.04.1 [30.1 kB]
+[   97.730174] cloud-init[1028]: Get:18 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libasan8 riscv64 14.2.0-4ubuntu2~24.04.1 [2643 kB]
+[   97.820531] cloud-init[1028]: Get:19 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libubsan1 riscv64 14.2.0-4ubuntu2~24.04.1 [1089 kB]
+[   97.858857] cloud-init[1028]: Get:20 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libgcc-13-dev riscv64 13.3.0-6ubuntu2~24.04.1 [4026 kB]
+[   97.995821] cloud-init[1028]: Get:21 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 gcc-13-riscv64-linux-gnu riscv64 13.3.0-6ubuntu2~24.04.1 [20.4 MB]
+[   98.916568] cloud-init[1028]: Get:22 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 gcc-13 riscv64 13.3.0-6ubuntu2~24.04.1 [484 kB]
+[   98.932651] cloud-init[1028]: Get:23 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 gcc-riscv64-linux-gnu riscv64 4:13.2.0-7ubuntu1 [1202 B]
+[   98.935553] cloud-init[1028]: Get:24 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 gcc riscv64 4:13.2.0-7ubuntu1 [5016 B]
+[   98.936505] cloud-init[1028]: Get:25 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libstdc++-13-dev riscv64 13.3.0-6ubuntu2~24.04.1 [5985 kB]
+[   99.133735] cloud-init[1028]: Get:26 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 g++-13-riscv64-linux-gnu riscv64 13.3.0-6ubuntu2~24.04.1 [12.0 MB]
+[   99.516700] cloud-init[1028]: Get:27 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 g++-13 riscv64 13.3.0-6ubuntu2~24.04.1 [16.0 kB]
+[   99.520295] cloud-init[1028]: Get:28 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 g++-riscv64-linux-gnu riscv64 4:13.2.0-7ubuntu1 [960 B]
+[   99.521370] cloud-init[1028]: Get:29 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 g++ riscv64 4:13.2.0-7ubuntu1 [1082 B]
+[   99.521855] cloud-init[1028]: Get:30 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 make riscv64 4.3-4.1build2 [178 kB]
+[   99.527987] cloud-init[1028]: Get:31 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 libdpkg-perl all 1.22.6ubuntu6.6 [268 kB]
+[   99.537971] cloud-init[1028]: Get:32 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 bzip2 riscv64 1.0.8-5.1ubuntu0.1 [35.0 kB]
+[   99.539900] cloud-init[1028]: Get:33 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 lto-disabled-list all 47 [12.4 kB]
+[   99.541469] cloud-init[1028]: Get:34 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 dpkg-dev all 1.22.6ubuntu6.6 [1074 kB]
+[   99.579502] cloud-init[1028]: Get:35 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 build-essential riscv64 12.10ubuntu1 [4934 B]
+[   99.716474] cloud-init[1028]: Get:36 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 libfakeroot riscv64 1.33-1 [34.6 kB]
+[   99.723374] cloud-init[1028]: Get:37 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 fakeroot riscv64 1.33-1 [78.4 kB]
+[   99.726549] cloud-init[1028]: Get:38 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 git-man all 1:2.43.0-1ubuntu7.4 [1101 kB]
+[   99.935659] cloud-init[1028]: Get:39 http://ports.ubuntu.com/ubuntu-ports noble-updates/main riscv64 git riscv64 1:2.43.0-1ubuntu7.4 [5444 kB]
+[  100.111622] cloud-init[1028]: Get:40 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 libalgorithm-diff-perl all 1.201-1 [41.8 kB]
+[  100.115540] cloud-init[1028]: Get:41 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 libalgorithm-diff-xs-perl riscv64 0.04-8build3 [11.0 kB]
+[  100.116813] cloud-init[1028]: Get:42 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 libalgorithm-merge-perl all 0.08-5 [11.4 kB]
+[  100.117816] cloud-init[1028]: Get:43 http://ports.ubuntu.com/ubuntu-ports noble/main riscv64 libfile-fcntllock-perl riscv64 0.22-4ubuntu5 [30.5 kB]
+[  102.634992] cloud-init[1028]: Fetched 68.5 MB in 5s (13.5 MB/s)
+[  102.847525] cloud-init[1028]: Selecting previously unselected package binutils-common:riscv64.
+[  103.239979] cloud-init[1028]: (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 89940 files and directories currently installed.)
+[  103.249415] cloud-init[1028]: Preparing to unpack .../00-binutils-common_2.42-4ubuntu2.10_riscv64.deb ...
+[  103.252245] cloud-init[1028]: Unpacking binutils-common:riscv64 (2.42-4ubuntu2.10) ...
+[  103.459995] cloud-init[1028]: Selecting previously unselected package libsframe1:riscv64.
+[  103.510611] cloud-init[1028]: Preparing to unpack .../01-libsframe1_2.42-4ubuntu2.10_riscv64.deb ...
+[  103.513751] cloud-init[1028]: Unpacking libsframe1:riscv64 (2.42-4ubuntu2.10) ...
+[  103.689230] cloud-init[1028]: Selecting previously unselected package libbinutils:riscv64.
+[  103.744370] cloud-init[1028]: Preparing to unpack .../02-libbinutils_2.42-4ubuntu2.10_riscv64.deb ...
+[  103.746541] cloud-init[1028]: Unpacking libbinutils:riscv64 (2.42-4ubuntu2.10) ...
+[  104.028931] cloud-init[1028]: Selecting previously unselected package libctf-nobfd0:riscv64.
+[  104.080721] cloud-init[1028]: Preparing to unpack .../03-libctf-nobfd0_2.42-4ubuntu2.10_riscv64.deb ...
+[  104.081827] cloud-init[1028]: Unpacking libctf-nobfd0:riscv64 (2.42-4ubuntu2.10) ...
+[  104.254778] cloud-init[1028]: Selecting previously unselected package libctf0:riscv64.
+[  104.315162] cloud-init[1028]: Preparing to unpack .../04-libctf0_2.42-4ubuntu2.10_riscv64.deb ...
+[  104.316402] cloud-init[1028]: Unpacking libctf0:riscv64 (2.42-4ubuntu2.10) ...
+[  104.497420] cloud-init[1028]: Selecting previously unselected package binutils-riscv64-linux-gnu.
+[  104.555678] cloud-init[1028]: Preparing to unpack .../05-binutils-riscv64-linux-gnu_2.42-4ubuntu2.10_riscv64.deb ...
+[  104.559375] cloud-init[1028]: Unpacking binutils-riscv64-linux-gnu (2.42-4ubuntu2.10) ...
+[  105.092930] cloud-init[1028]: Selecting previously unselected package binutils.
+[  105.142580] cloud-init[1028]: Preparing to unpack .../06-binutils_2.42-4ubuntu2.10_riscv64.deb ...
+[  105.144366] cloud-init[1028]: Unpacking binutils (2.42-4ubuntu2.10) ...
+[  105.315489] cloud-init[1028]: Selecting previously unselected package gcc-13-base:riscv64.
+[  105.367663] cloud-init[1028]: Preparing to unpack .../07-gcc-13-base_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  105.368727] cloud-init[1028]: Unpacking gcc-13-base:riscv64 (13.3.0-6ubuntu2~24.04.1) ...
+[  105.537067] cloud-init[1028]: Selecting previously unselected package libisl23:riscv64.
+[  105.589556] cloud-init[1028]: Preparing to unpack .../08-libisl23_0.26-3build1.1_riscv64.deb ...
+[  105.591116] cloud-init[1028]: Unpacking libisl23:riscv64 (0.26-3build1.1) ...
+[  105.838598] cloud-init[1028]: Selecting previously unselected package libmpc3:riscv64.
+[  105.892157] cloud-init[1028]: Preparing to unpack .../09-libmpc3_1.3.1-1build1.1_riscv64.deb ...
+[  105.893997] cloud-init[1028]: Unpacking libmpc3:riscv64 (1.3.1-1build1.1) ...
+[  106.060730] cloud-init[1028]: Selecting previously unselected package cpp-13-riscv64-linux-gnu.
+[  106.115090] cloud-init[1028]: Preparing to unpack .../10-cpp-13-riscv64-linux-gnu_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  106.115776] cloud-init[1028]: Unpacking cpp-13-riscv64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+[  107.402415] cloud-init[1028]: Selecting previously unselected package cpp-13.
+[  107.466435] cloud-init[1028]: Preparing to unpack .../11-cpp-13_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  107.468247] cloud-init[1028]: Unpacking cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+[  107.657496] cloud-init[1028]: Selecting previously unselected package cpp-riscv64-linux-gnu.
+[  107.715975] cloud-init[1028]: Preparing to unpack .../12-cpp-riscv64-linux-gnu_4%3a13.2.0-7ubuntu1_riscv64.deb ...
+[  107.718386] cloud-init[1028]: Unpacking cpp-riscv64-linux-gnu (4:13.2.0-7ubuntu1) ...
+[  107.915819] cloud-init[1028]: Selecting previously unselected package cpp.
+[  107.982461] cloud-init[1028]: Preparing to unpack .../13-cpp_4%3a13.2.0-7ubuntu1_riscv64.deb ...
+[  108.093894] cloud-init[1028]: Unpacking cpp (4:13.2.0-7ubuntu1) ...
+[  108.272750] cloud-init[1028]: Selecting previously unselected package libcc1-0:riscv64.
+[  108.325643] cloud-init[1028]: Preparing to unpack .../14-libcc1-0_14.2.0-4ubuntu2~24.04.1_riscv64.deb ...
+[  108.327088] cloud-init[1028]: Unpacking libcc1-0:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  108.522119] cloud-init[1028]: Selecting previously unselected package libgomp1:riscv64.
+[  108.576629] cloud-init[1028]: Preparing to unpack .../15-libgomp1_14.2.0-4ubuntu2~24.04.1_riscv64.deb ...
+[  108.579176] cloud-init[1028]: Unpacking libgomp1:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  108.766177] cloud-init[1028]: Selecting previously unselected package libitm1:riscv64.
+[  108.818724] cloud-init[1028]: Preparing to unpack .../16-libitm1_14.2.0-4ubuntu2~24.04.1_riscv64.deb ...
+[  108.821717] cloud-init[1028]: Unpacking libitm1:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  108.994103] cloud-init[1028]: Selecting previously unselected package libasan8:riscv64.
+[  109.055317] cloud-init[1028]: Preparing to unpack .../17-libasan8_14.2.0-4ubuntu2~24.04.1_riscv64.deb ...
+[  109.057951] cloud-init[1028]: Unpacking libasan8:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  109.655761] cloud-init[1028]: Selecting previously unselected package libubsan1:riscv64.
+[  109.706948] cloud-init[1028]: Preparing to unpack .../18-libubsan1_14.2.0-4ubuntu2~24.04.1_riscv64.deb ...
+[  109.708591] cloud-init[1028]: Unpacking libubsan1:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  110.021266] cloud-init[1028]: Selecting previously unselected package libgcc-13-dev:riscv64.
+[  110.077118] cloud-init[1028]: Preparing to unpack .../19-libgcc-13-dev_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  110.078956] cloud-init[1028]: Unpacking libgcc-13-dev:riscv64 (13.3.0-6ubuntu2~24.04.1) ...
+[  111.217086] cloud-init[1028]: Selecting previously unselected package gcc-13-riscv64-linux-gnu.
+[  111.280467] cloud-init[1028]: Preparing to unpack .../20-gcc-13-riscv64-linux-gnu_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  111.282245] cloud-init[1028]: Unpacking gcc-13-riscv64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+[  113.530330] cloud-init[1028]: Selecting previously unselected package gcc-13.
+[  113.584364] cloud-init[1028]: Preparing to unpack .../21-gcc-13_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  113.585950] cloud-init[1028]: Unpacking gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+[  113.797684] cloud-init[1028]: Selecting previously unselected package gcc-riscv64-linux-gnu.
+[  113.850706] cloud-init[1028]: Preparing to unpack .../22-gcc-riscv64-linux-gnu_4%3a13.2.0-7ubuntu1_riscv64.deb ...
+[  113.852290] cloud-init[1028]: Unpacking gcc-riscv64-linux-gnu (4:13.2.0-7ubuntu1) ...
+[  114.052216] cloud-init[1028]: Selecting previously unselected package gcc.
+[  114.110481] cloud-init[1028]: Preparing to unpack .../23-gcc_4%3a13.2.0-7ubuntu1_riscv64.deb ...
+[  114.112747] cloud-init[1028]: Unpacking gcc (4:13.2.0-7ubuntu1) ...
+[  114.311263] cloud-init[1028]: Selecting previously unselected package libstdc++-13-dev:riscv64.
+[  114.369061] cloud-init[1028]: Preparing to unpack .../24-libstdc++-13-dev_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  114.370984] cloud-init[1028]: Unpacking libstdc++-13-dev:riscv64 (13.3.0-6ubuntu2~24.04.1) ...
+[  116.463728] cloud-init[1028]: Selecting previously unselected package g++-13-riscv64-linux-gnu.
+[  116.521069] cloud-init[1028]: Preparing to unpack .../25-g++-13-riscv64-linux-gnu_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  116.522745] cloud-init[1028]: Unpacking g++-13-riscv64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+[  118.010618] cloud-init[1028]: Selecting previously unselected package g++-13.
+[  118.064392] cloud-init[1028]: Preparing to unpack .../26-g++-13_13.3.0-6ubuntu2~24.04.1_riscv64.deb ...
+[  118.066580] cloud-init[1028]: Unpacking g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+[  118.255813] cloud-init[1028]: Selecting previously unselected package g++-riscv64-linux-gnu.
+[  118.315658] cloud-init[1028]: Preparing to unpack .../27-g++-riscv64-linux-gnu_4%3a13.2.0-7ubuntu1_riscv64.deb ...
+[  118.318439] cloud-init[1028]: Unpacking g++-riscv64-linux-gnu (4:13.2.0-7ubuntu1) ...
+[  118.511255] cloud-init[1028]: Selecting previously unselected package g++.
+[  118.565466] cloud-init[1028]: Preparing to unpack .../28-g++_4%3a13.2.0-7ubuntu1_riscv64.deb ...
+[  118.567328] cloud-init[1028]: Unpacking g++ (4:13.2.0-7ubuntu1) ...
+[  118.752749] cloud-init[1028]: Selecting previously unselected package make.
+[  118.814192] cloud-init[1028]: Preparing to unpack .../29-make_4.3-4.1build2_riscv64.deb ...
+[  118.818550] cloud-init[1028]: Unpacking make (4.3-4.1build2) ...
+[  119.038362] cloud-init[1028]: Selecting previously unselected package libdpkg-perl.
+[  119.113102] cloud-init[1028]: Preparing to unpack .../30-libdpkg-perl_1.22.6ubuntu6.6_all.deb ...
+[  119.114581] cloud-init[1028]: Unpacking libdpkg-perl (1.22.6ubuntu6.6) ...
+[  119.657458] cloud-init[1028]: Selecting previously unselected package bzip2.
+[  119.708448] cloud-init[1028]: Preparing to unpack .../31-bzip2_1.0.8-5.1ubuntu0.1_riscv64.deb ...
+[  119.716770] cloud-init[1028]: Unpacking bzip2 (1.0.8-5.1ubuntu0.1) ...
+[  119.939251] cloud-init[1028]: Selecting previously unselected package lto-disabled-list.
+[  119.992559] cloud-init[1028]: Preparing to unpack .../32-lto-disabled-list_47_all.deb ...
+[  119.996487] cloud-init[1028]: Unpacking lto-disabled-list (47) ...
+[  120.205015] cloud-init[1028]: Selecting previously unselected package dpkg-dev.
+[  120.249102] cloud-init[1028]: Preparing to unpack .../33-dpkg-dev_1.22.6ubuntu6.6_all.deb ...
+[  120.250787] cloud-init[1028]: Unpacking dpkg-dev (1.22.6ubuntu6.6) ...
+[  120.677437] cloud-init[1028]: Selecting previously unselected package build-essential.
+[  120.731346] cloud-init[1028]: Preparing to unpack .../34-build-essential_12.10ubuntu1_riscv64.deb ...
+[  120.732468] cloud-init[1028]: Unpacking build-essential (12.10ubuntu1) ...
+[  120.922967] cloud-init[1028]: Selecting previously unselected package libfakeroot:riscv64.
+[  120.984683] cloud-init[1028]: Preparing to unpack .../35-libfakeroot_1.33-1_riscv64.deb ...
+[  120.985889] cloud-init[1028]: Unpacking libfakeroot:riscv64 (1.33-1) ...
+[  121.213828] cloud-init[1028]: Selecting previously unselected package fakeroot.
+[  121.279561] cloud-init[1028]: Preparing to unpack .../36-fakeroot_1.33-1_riscv64.deb ...
+[  121.280941] cloud-init[1028]: Unpacking fakeroot (1.33-1) ...
+[  121.537378] cloud-init[1028]: Preparing to unpack .../37-git-man_1%3a2.43.0-1ubuntu7.4_all.deb ...
+[  121.540281] cloud-init[1028]: Unpacking git-man (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+[  121.958027] cloud-init[1028]: Preparing to unpack .../38-git_1%3a2.43.0-1ubuntu7.4_riscv64.deb ...
+[  122.238288] cloud-init[1028]: Unpacking git (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+[  124.114231] cloud-init[1028]: Selecting previously unselected package libalgorithm-diff-perl.
+[  124.177325] cloud-init[1028]: Preparing to unpack .../39-libalgorithm-diff-perl_1.201-1_all.deb ...
+[  124.179514] cloud-init[1028]: Unpacking libalgorithm-diff-perl (1.201-1) ...
+[  124.395964] cloud-init[1028]: Selecting previously unselected package libalgorithm-diff-xs-perl:riscv64.
+[  124.450889] cloud-init[1028]: Preparing to unpack .../40-libalgorithm-diff-xs-perl_0.04-8build3_riscv64.deb ...
+[  124.453207] cloud-init[1028]: Unpacking libalgorithm-diff-xs-perl:riscv64 (0.04-8build3) ...
+[  124.636662] cloud-init[1028]: Selecting previously unselected package libalgorithm-merge-perl.
+[  124.697872] cloud-init[1028]: Preparing to unpack .../41-libalgorithm-merge-perl_0.08-5_all.deb ...
+[  124.699573] cloud-init[1028]: Unpacking libalgorithm-merge-perl (0.08-5) ...
+[  124.865066] cloud-init[1028]: Selecting previously unselected package libfile-fcntllock-perl.
+[  124.928891] cloud-init[1028]: Preparing to unpack .../42-libfile-fcntllock-perl_0.22-4ubuntu5_riscv64.deb ...
+[  124.930347] cloud-init[1028]: Unpacking libfile-fcntllock-perl (0.22-4ubuntu5) ...
+[  125.214558] cloud-init[1028]: Setting up lto-disabled-list (47) ...
+[  125.216981] cloud-init[1028]: Setting up libfile-fcntllock-perl (0.22-4ubuntu5) ...
+[  125.222229] cloud-init[1028]: Setting up libalgorithm-diff-perl (1.201-1) ...
+[  125.223582] cloud-init[1028]: Setting up binutils-common:riscv64 (2.42-4ubuntu2.10) ...
+[  125.225741] cloud-init[1028]: Setting up libctf-nobfd0:riscv64 (2.42-4ubuntu2.10) ...
+[  125.226718] cloud-init[1028]: Setting up libgomp1:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  125.229021] cloud-init[1028]: Setting up bzip2 (1.0.8-5.1ubuntu0.1) ...
+[  125.231300] cloud-init[1028]: Setting up libsframe1:riscv64 (2.42-4ubuntu2.10) ...
+[  125.233559] cloud-init[1028]: Setting up libfakeroot:riscv64 (1.33-1) ...
+[  125.238653] cloud-init[1028]: Setting up fakeroot (1.33-1) ...
+[  125.316492] cloud-init[1028]: update-alternatives: using /usr/bin/fakeroot-sysv to provide /usr/bin/fakeroot (fakeroot) in auto mode
+[  125.362595] cloud-init[1028]: Setting up gcc-13-base:riscv64 (13.3.0-6ubuntu2~24.04.1) ...
+[  125.364830] cloud-init[1028]: Setting up make (4.3-4.1build2) ...
+[  125.367655] cloud-init[1028]: Setting up libmpc3:riscv64 (1.3.1-1build1.1) ...
+[  125.370587] cloud-init[1028]: Setting up libdpkg-perl (1.22.6ubuntu6.6) ...
+[  125.373059] cloud-init[1028]: Setting up libubsan1:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  125.375655] cloud-init[1028]: Setting up libasan8:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  125.378851] cloud-init[1028]: Setting up git-man (1:2.43.0-1ubuntu7.4) ...
+[  125.381409] cloud-init[1028]: Setting up libbinutils:riscv64 (2.42-4ubuntu2.10) ...
+[  125.384510] cloud-init[1028]: Setting up libisl23:riscv64 (0.26-3build1.1) ...
+[  125.386772] cloud-init[1028]: Setting up libalgorithm-diff-xs-perl:riscv64 (0.04-8build3) ...
+[  125.389210] cloud-init[1028]: Setting up libcc1-0:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  125.391846] cloud-init[1028]: Setting up libitm1:riscv64 (14.2.0-4ubuntu2~24.04.1) ...
+[  125.394911] cloud-init[1028]: Setting up libalgorithm-merge-perl (0.08-5) ...
+[  125.397397] cloud-init[1028]: Setting up libctf0:riscv64 (2.42-4ubuntu2.10) ...
+[  125.399871] cloud-init[1028]: Setting up cpp-13-riscv64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+[  125.402232] cloud-init[1028]: Setting up binutils-riscv64-linux-gnu (2.42-4ubuntu2.10) ...
+[  125.404603] cloud-init[1028]: Setting up binutils (2.42-4ubuntu2.10) ...
+[  125.406866] cloud-init[1028]: Setting up dpkg-dev (1.22.6ubuntu6.6) ...
+[  125.411568] cloud-init[1028]: Setting up git (1:2.43.0-1ubuntu7.4) ...
+[  125.555253] cloud-init[1028]: Setting up libgcc-13-dev:riscv64 (13.3.0-6ubuntu2~24.04.1) ...
+[  125.557207] cloud-init[1028]: Setting up cpp-riscv64-linux-gnu (4:13.2.0-7ubuntu1) ...
+[  125.559555] cloud-init[1028]: Setting up libstdc++-13-dev:riscv64 (13.3.0-6ubuntu2~24.04.1) ...
+[  125.562102] cloud-init[1028]: Setting up cpp-13 (13.3.0-6ubuntu2~24.04.1) ...
+[  125.564743] cloud-init[1028]: Setting up gcc-13-riscv64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+[  125.567378] cloud-init[1028]: Setting up gcc-riscv64-linux-gnu (4:13.2.0-7ubuntu1) ...
+[  125.570124] cloud-init[1028]: Setting up gcc-13 (13.3.0-6ubuntu2~24.04.1) ...
+[  125.572490] cloud-init[1028]: Setting up cpp (4:13.2.0-7ubuntu1) ...
+[  125.712422] cloud-init[1028]: Setting up g++-13-riscv64-linux-gnu (13.3.0-6ubuntu2~24.04.1) ...
+[  125.714656] cloud-init[1028]: Setting up g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+[  125.717457] cloud-init[1028]: Setting up gcc (4:13.2.0-7ubuntu1) ...
+[  125.846808] cloud-init[1028]: Setting up g++-riscv64-linux-gnu (4:13.2.0-7ubuntu1) ...
+[  125.848757] cloud-init[1028]: Setting up g++ (4:13.2.0-7ubuntu1) ...
+[  125.901570] cloud-init[1028]: update-alternatives: using /usr/bin/g++ to provide /usr/bin/c++ (c++) in auto mode
+[  125.909270] cloud-init[1028]: Setting up build-essential (12.10ubuntu1) ...
+[  125.913788] cloud-init[1028]: Processing triggers for man-db (2.12.0-4build2) ...
+[  130.422845] cloud-init[1028]: Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+[  135.879942] cloud-init[1028]: Running kernel seems to be up-to-date.
+[  135.880976] cloud-init[1028]: No services need to be restarted.
+[  135.881515] cloud-init[1028]: No containers need to be restarted.
+[  135.881910] cloud-init[1028]: No user sessions are running outdated binaries.
+[  135.882289] cloud-init[1028]: No VM guests are running outdated hypervisor (qemu) binaries on this host.
+[  140.708292] cloud-init[1028]: Reading package lists...
+[  141.239451] cloud-init[1028]: Building dependency tree...
+[  141.242628] cloud-init[1028]: Reading state information...
+[  141.796067] cloud-init[1028]: linux-headers-7.0.0-31-generic is already the newest version (7.0.0-31.31.1~24.04.1).
+[  141.796660] cloud-init[1028]: linux-headers-7.0.0-31-generic set to manually installed.
+[  141.797141] cloud-init[1028]: 0 upgraded, 0 newly installed, 0 to remove and 107 not upgraded.
+ci-info: +++++++++++++++++++++++++++++++++++++Authorized keys from /home/ubuntu/.ssh/authorized_keys for user ubuntu++++++++++++++++++++++++++++++++++++++
+ci-info: +-------------+-------------------------------------------------------------------------------------------------+---------+---------------------+
+ci-info: |   Keytype   |                                       Fingerprint (sha256)                                      | Options |       Comment       |
+ci-info: +-------------+-------------------------------------------------------------------------------------------------+---------+---------------------+
+ci-info: | ssh-ed25519 | <MAC>:<MAC>:<MAC>:<MAC>:<MAC>:23:be |    -    | lattice-repro-guest |
+ci-info: +-------------+-------------------------------------------------------------------------------------------------+---------+---------------------+
+<14>Oct 28 04:03:02 cloud-init: #############################################################
+<14>Oct 28 04:03:02 cloud-init: -----BEGIN SSH HOST KEY FINGERPRINTS-----
+<14>Oct 28 04:03:02 cloud-init: 256 SHA256:oKxXZpAvMIEnO8SiWXlnzkgenjnVyEwdntZu6pAzTEY root@lattice-guest (ECDSA)
+<14>Oct 28 04:03:02 cloud-init: 256 SHA256:JgzR2ZxzYCcwH6vTAzcCCFmrdgPjHqZs+j21TX+BiGs root@lattice-guest (ED25519)
+<14>Oct 28 04:03:02 cloud-init: 3072 SHA256:ie1y+qb1JxF3bbmqOQD3t/otvtmcJxyzVFSmBQv3zog root@lattice-guest (RSA)
+<14>Oct 28 04:03:02 cloud-init: -----END SSH HOST KEY FINGERPRINTS-----
+<14>Oct 28 04:03:02 cloud-init: #############################################################
+-----BEGIN SSH HOST KEY KEYS-----
+ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFK4+b2rn8KAWJER+b+hqPojQGB8GyIDTWlJUCoFhpOViQ+DGpEztBsSAo2XBlgIagPzrEwn+yZrD9Fx4C1RVIQ= root@lattice-guest
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM9Y+iy5/WVNz/bs833iaPLFHaFimcereYcmgUqa3qag root@lattice-guest
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCRigVr7WaBCPL9NiZEREduBtkr/y+eB3XcI3xGHGi32/4PjpHZEPX9X4HpbbEmKeqzbK7t5zVkfwmDcVFFgz/lwu7/l9GDMUlZLzEN1lpDJUPgpXdlNPWt8BG6j/g/eArh6hU8Rb963OwUezImqB/qLFp4M8GfksYivU/uEdN3TMEtMYJeEViDFP1b44FTPs7HTUEuEncOIypSuNbxAWenM8StEf22ynXy4BjHOHWkPsXZqFE0TH6F60Yt1NBrGlOmqiiEBuwINb4ILf4nzkGKE2Y5cFfE+5JfE4xpQF3smCkpWZPLX9KTg6I+z+AaYAFS1VomWSQR1T5yy2CbgRdguYIGazRKSMEYOn73+nUpxCyWC8DEgBExmYkRQqM7dJOdL3yQZXmadwERF28+4xaCDXtaAK1RyBmexVOkXkvKJ+FaFnrVejKOisXqXVH4P3nf9u/YmMp2UNR2u+w1x4SGcrOtdhCOpZR0S3cuixRw7jk7Hlx/jm5+C7hkiUD9nnk= root@lattice-guest
+-----END SSH HOST KEY KEYS-----
+[  142.320724] cloud-init[1028]: LATTICE_CLOUD_INIT_DONE after 142.31 seconds
+[  OK  ] Removed slice system-modprobe.slice - Slice /system/modprobe.
+[  OK  ] Stopped target cloud-init.target - Cloud-init target.
+[  OK  ] Stopped target graphical.target - Graphical Interface.
+[  OK  ] Stopped target nss-lookup.target - Host and Network Name Lookups.
+[  OK  ] Stopped target timers.target - Timer Units.
+[  OK  ] Stopped apt-daily-upgrade.timer - …y apt upgrade and clean activities.
+[  OK  ] Stopped apt-daily.timer - Daily apt download activities.
+[  OK  ] Stopped dpkg-db-backup.timer - Daily dpkg database backup timer.
+[  OK  ] Stopped e2scrub_all.timer - Period…Metadata Check for All Filesystems.
+[  OK  ] Stopped fstrim.timer - Discard unused filesystem blocks once a week.
+[  OK  ] Stopped fwupd-refresh.timer - Refresh fwupd metadata regularly.
+[  OK  ] Stopped logrotate.timer - Daily rotation of log files.
+[  OK  ] Stopped man-db.timer - Daily man-db regeneration.
+[  OK  ] Stopped motd-news.timer - Message of the Day.
+[  OK  ] Stopped sysstat-collect.timer - Ru…y accounting tool every 10 minutes.
+[  OK  ] Stopped sysstat-summary.timer - Ge… of yesterday's process accounting.
+[  OK  ] Stopped systemd-tmpfiles-clean.tim…y Cleanup of Temporary Directories.
+[  OK  ] Stopped update-notifier-download.t…hat failed at package install time.
+[  OK  ] Stopped update-notifier-motd.timer… a new version of Ubuntu available.
+[  OK  ] Stopped target time-set.target - System Time Set.
+[  OK  ] Closed cloud-init-hotplugd.socket - cloud-init hotplug hook socket.
+[  OK  ] Closed lvm2-lvmpolld.socket - LVM2 poll daemon socket.
+[  OK  ] Closed systemd-rfkill.socket - Loa…ll Switch Status /dev/rfkill Watch.
+         Stopping blk-availability.service - Availability of block devices...
+[  OK  ] Stopped cloud-final.service - Cloud-init: Final Stage.
+[  OK  ] Stopped target multi-user.target - Multi-User System.
+[  OK  ] Stopped target getty.target - Login Prompts.
+         Stopping ModemManager.service - Modem Manager...
+         Stopping apport.service - automatic crash report generation...
+[  OK  ] Stopped cloud-config.service - Cloud-init: Config Stage.
+[  OK  ] Stopped target cloud-config.target - Cloud-config availability.
+[  OK  ] Stopped target network-online.target - Network is Online.
+         Stopping cron.service - Regular ba…ground program processing daemon...
+         Stopping finalrd.service - Create …time dir for shutdown pivot root...
+         Stopping <EMAIL> - Getty on tty1...
+         Stopping packagekit.service - PackageKit Daemon...
+[  OK  ] Stopped plymouth-quit.service - Terminate Plymouth Boot Screen.
+         Stopping rsyslog.service - System Logging Service...
+         Stopping <EMAIL> - Serial Getty on ttyS0...
+[  OK  ] Stopped snapd.seeded.service - Wait until snapd is fully seeded.
+         Stopping ssh.service - OpenBSD Secure Shell server...
+[  OK  ] Stopped sysstat.service - Resets System Activity Logs.
+         Stopping systemd-logind.service - User Login Management...
+[  OK  ] Stopped systemd-machine-id-commit.…mit a transient machine-id on disk.
+         Stopping systemd-random-seed.service - Load/Save OS Random Seed...
+         Stopping udisks2.service - Disk Manager...
+         Stopping <EMAIL> - User Manager for UID 1000...
+[  OK  ] Stopped cron.service - Regular background program processing daemon.
+[  OK  ] Stopped systemd-logind.service - User Login Management.
+[  OK  ] Stopped ModemManager.service - Modem Manager.
+[  OK  ] Stopped <EMAIL> - Serial Getty on ttyS0.
+[  OK  ] Stopped <EMAIL> - Getty on tty1.
+[  OK  ] Stopped packagekit.service - PackageKit Daemon.
+[  OK  ] Stopped ssh.service - OpenBSD Secure Shell server.
+[  OK  ] Stopped rsyslog.service - System Logging Service.
+[  OK  ] Removed slice system-getty.slice - Slice /system/getty.
+[  OK  ] Removed slice system-serial\x2dget…slice - Slice /system/serial-getty.
+[  OK  ] Stopped target getty-pre.target - Preparation for Logins.
+[  OK  ] Stopped plymouth-quit-wait.service…old until boot process finishes up.
+         Stopping polkit.service - Authorization Manager...
+[  OK  ] Stopped polkit.service - Authorization Manager.
+[  OK  ] Stopped udisks2.service - Disk Manager.
+[  OK  ] Stopped systemd-random-seed.service - Load/Save OS Random Seed.
+[  OK  ] Stopped <EMAIL> - User Manager for UID 1000.
+[  OK  ] Stopped blk-availability.service - Availability of block devices.
+         Stopping systemd-user-sessions.service - Permit User Sessions...
+         Stopping <EMAIL>…Runtime Directory /run/user/1000...
+[  OK  ] Stopped systemd-user-sessions.service - Permit User Sessions.
+[  OK  ] Unmounted run-user-1000.mount - /run/user/1000.
+[  OK  ] Stopped <EMAIL>…r Runtime Directory /run/user/1000.
+[  OK  ] Removed slice user-1000.slice - User Slice of UID 1000.
+[  OK  ] Stopped target network.target - Network.
+         Stopping systemd-networkd.service - Network Configuration...
+         Stopping wpa_supplicant.service - WPA supplicant...
+[  OK  ] Stopped wpa_supplicant.service - WPA supplicant.
+[  OK  ] Stopped systemd-networkd.service - Network Configuration.
+[  OK  ] Stopped target network-pre.target - Preparation for Network.
+[  OK  ] Stopped apport.service - automatic crash report generation.
+[  OK  ] Stopped target basic.target - Basic System.
+[  OK  ] Stopped target paths.target - Path Units.
+[  OK  ] Stopped target remote-fs.target - Remote File Systems.
+[  OK  ] Stopped target remote-fs-pre.targe…reparation for Remote File Systems.
+[  OK  ] Stopped target slices.target - Slice Units.
+[  OK  ] Removed slice user.slice - User and Session Slice.
+[  OK  ] Stopped target sockets.target - Socket Units.
+[  OK  ] Closed iscsid.socket - Open-iSCSI iscsid Socket.
+[  OK  ] Closed lxd-installer.socket - Helper to install lxd snap on demand.
+[  OK  ] Closed snapd.socket - Socket activation for snappy daemon.
+[  OK  ] Closed ssh.socket - OpenBSD Secure Shell server socket.
+[  OK  ] Closed syslog.socket - Syslog Socket.
+[  OK  ] Closed systemd-networkd.socket - Network Service Netlink Socket.
+[  OK  ] Closed uuidd.socket - UUID daemon activation socket.
+[  OK  ] Stopped target sysinit.target - System Initialization.
+[  OK  ] Stopped target cryptsetup.target - Local Encrypted Volumes.
+[  OK  ] Stopped systemd-ask-password-conso…equests to Console Directory Watch.
+[  OK  ] Stopped systemd-ask-password-wall.…d Requests to Wall Directory Watch.
+[  OK  ] Stopped target integritysetup.targ… Local Integrity Protected Volumes.
+[  OK  ] Stopped target swap.target - Swaps.
+[  OK  ] Stopped target veritysetup.target - Local Verity Protected Volumes.
+[  OK  ] Stopped cloud-init.service - Cloud-init: Network Stage.
+[  OK  ] Stopped cloud-init-local.service -…ud-init: Local Stage (pre-network).
+         Stopping systemd-binfmt.service - Set Up Additional Binary Formats...
+         Stopping systemd-resolved.service - Network Name Resolution...
+         Stopping systemd-timesyncd.service - Network Time Synchronization...
+[  OK  ] Stopped systemd-update-done.service - Update is Completed.
+[  OK  ] Stopped ldconfig.service - Rebuild Dynamic Linker Cache.
+[  OK  ] Stopped systemd-journal-catalog-up….service - Rebuild Journal Catalog.
+         Stopping systemd-update-utmp.servi…ord System Boot/Shutdown in UTMP...
+[  OK  ] Stopped systemd-timesyncd.service - Network Time Synchronization.
+[  OK  ] Stopped systemd-resolved.service - Network Name Resolution.
+[  OK  ] Stopped systemd-binfmt.service - Set Up Additional Binary Formats.
+[  OK  ] Unset automount proc-sys-fs-binfmt…ormats File System Automount Point.
+[  OK  ] Stopped systemd-sysctl.service - Apply Kernel Variables.
+[  OK  ] Stopped systemd-modules-load.service - Load Kernel Modules.
+[  OK  ] Stopped systemd-update-utmp.servic…ecord System Boot/Shutdown in UTMP.
+[  OK  ] Stopped systemd-tmpfiles-setup.ser…ate Volatile Files and Directories.
+[    **] Job finalrd.service/stop running (4s / 1min 30s)
+M[   ***] Job finalrd.service/stop running (4s / 1min 30s)
+M[  *** ] Job finalrd.service/stop running (5s / 1min 30s)
+M[ ***  ] Job finalrd.service/stop running (5s / 1min 30s)
+M[***   ] Job finalrd.service/stop running (6s / 1min 30s)
+M[**    ] Job finalrd.service/stop running (6s / 1min 30s)
+M[*     ] Job finalrd.service/stop running (7s / 1min 30s)
+M[**    ] Job finalrd.service/stop running (7s / 1min 30s)
+M[***   ] Job finalrd.service/stop running (8s / 1min 30s)
+M[ ***  ] Job finalrd.service/stop running (8s / 1min 30s)
+M[  OK  ] Stopped finalrd.service - Create f…untime dir for shutdown pivot root.
+[  OK  ] Stopped target local-fs.target - Local File Systems.
+[  OK  ] Stopped target snapd.mounts.target - Mounted snaps.
+[  OK  ] Stopped target snapd.mounts-pre.target - Mounting snaps.
+         Unmounting boot-efi.mount - /boot/efi...
+[  OK  ] Unmounted boot-efi.mount - /boot/efi.
+[  OK  ] Reached target umount.target - Unmount All Filesystems.
+[  OK  ] Stopped systemd-fsck@dev-disk-by\x…m Check on /dev/disk/by-label/UEFI.
+[  OK  ] Removed slice system-systemd\x2dfs…slice - Slice /system/systemd-fsck.
+[  OK  ] Stopped target local-fs-pre.target…Preparation for Local File Systems.
+         Stopping lvm2-monitor.service - Mo…ing dmeventd or progress polling...
+         Stopping multipathd.service - Devi…pper Multipath Device Controller...
+[  OK  ] Stopped systemd-tmpfiles-setup-dev…Create Static Device Nodes in /dev.
+[  OK  ] Stopped systemd-sysusers.service - Create System Users.
+[  OK  ] Stopped systemd-tmpfiles-setup-dev…ic Device Nodes in /dev gracefully.
+[  OK  ] Stopped multipathd.service - Devic…Mapper Multipath Device Controller.
+[  OK  ] Stopped systemd-remount-fs.service…mount Root and Kernel File Systems.
+[  OK  ] Stopped lvm2-monitor.service - Mon…using dmeventd or progress polling.
+[  OK  ] Reached target shutdown.target - System Shutdown.
+[  OK  ] Reached target final.target - Late Shutdown Services.
+[  OK  ] Finished systemd-poweroff.service - System Power Off.
+[  OK  ] Reached target poweroff.target - System Power Off.
+[  183.290011] reboot: Power down

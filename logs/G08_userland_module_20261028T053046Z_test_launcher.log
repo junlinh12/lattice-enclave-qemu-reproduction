@@ -1,0 +1,10 @@
+warning: $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/macros/Cargo.toml: unused manifest key: proc_macro
+warning: $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/runtime/Cargo.toml: unused manifest key: target.riscv64imac-unknown-none-elf.linker
+warning: $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/nostd-rbtree/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+   Compiling test_launcher v0.1.0 ($HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/test_launcher)
+warning: unstable feature specified for `-Ctarget-feature`: `relax`
+  |
+  = note: this feature is not stably supported; its behavior can change in the future
+
+warning: `test_launcher` (bin "test_launcher") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 1.80s

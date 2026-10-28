@@ -1,0 +1,197 @@
+
+==================== META ====================
+gate=G09 (v2: LSE before LUE) timestamp_utc=20261028T055959Z run_timeout=300s
+
+==================== 1. Boot guest, copy & verify stage, load teectl ====================
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/SHA256SUMS'
+80d492612aeab525a751803a53d63c6639f1887e808ea476b336bb05f1528943  ./client
+9029003be8d5f0cae8af7bd8e10b3b56070178c2a616691363fad9ce2219042b  ./config.toml
+0143fecc8bc94892a60ab21fd1637aa64944f08abafd233f326a71d5661da7d4  ./fw-rt.bin
+9ca5a46500850bfd57f9b5ecabd61395de059ec16269f99d511b19bfd05e5890  ./hello
+61b4b73ab5c980510714a167af7cd7d2e018b19180fd3165dea9d79b58961478  ./tee_mod/main.c
+a0fac2b32e232c67314cf252a2a2aad9b4400bfb96a86c7c4669d74f8666c264  ./tee_mod/Makefile
+5d89cc88fb6bf7e6ed9182c1f2129f968966540ccf0d75d23488d4acfad16e0f  ./test_launcher
+(exit=0)
+
+[guest]$ cd ~/lattice && sha256sum -c --quiet SHA256SUMS && echo checksums-OK
+checksums-OK
+(exit=0)
+
+[guest]$ cd ~/lattice/tee_mod && make build >/dev/null 2>&1; sudo insmod teectl.ko && ls -l /dev/teectl
+crw------- 1 root root 10, 262 Oct 28 06:01 /dev/teectl
+(exit=0)
+
+==================== 2. Native baseline (outside enclave) ====================
+
+[guest]$ cd ~/lattice && s=$(date +%s%N); ./hello; e=$(date +%s%N); echo "native hello: $(( (e-s)/1000000 )) ms"
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+native hello: 43 ms
+(exit=0)
+
+==================== 3. Register Linux Service Enclave (client --lse, background) ====================
+
+[guest]$ cd ~/lattice && sudo sh -c "nohup ./client --lse -c config.toml > lse.out 2>&1 < /dev/null &"; for i in $(seq 1 60); do grep -q "lse created" lse.out 2>/dev/null && break; sleep 2; done; cat lse.out; pgrep -af "[c]lient --lse"
+[Client] Load runtime: ./fw-rt.bin
+rt size: 59776
+alloc size: 0xf000
+fd: 4
+command: 0x40106b01
+mmap fd: 5
+size: 65536
+mmap addr: 0x7ffe9952e000
+memory region: 0x7ffe9952e000 - 0x7ffe9953d000
+create enclave
+lse created
+eidx: 0x2
+1465 ./client --lse -c config.toml
+(exit=0)
+
+==================== 4. Linux User Enclave runs (x3, sequential) ====================
+
+[guest]$ sudo timeout 300 ./client -c config.toml ./hello   (output -> logs/G09_enclave_smoke_20261028T055959Z_T1_hello_run1.log)
+alloc size: 0x1400000
+fd: 3
+command: 0x40106b01
+mmap fd: 4
+size: 20971520
+mmap addr: 0x7ff2347b6000
+memory region: 0x7ff2347b6000 - 0x7ff235bb6000
+create enclave
+lue created
+eidx: 0x3
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+enclave finished
+__CLIENT_RC=0
+ssh_rc=0  wall_ms=1527
+--- serial console since step start (SM/runtime/kernel) ---
+[INFO] pmp fault num: 0
+[INFO] enclave pause num: 0
+[INFO] Cleaning enclave 3
+[INFO] [SM] Enclave 3 cleaned
+
+[guest]$ sudo timeout 300 ./client -c config.toml ./hello   (output -> logs/G09_enclave_smoke_20261028T055959Z_T1_hello_run2.log)
+alloc size: 0x1400000
+fd: 3
+command: 0x40106b01
+mmap fd: 4
+size: 20971520
+mmap addr: 0x7ff5e894a000
+memory region: 0x7ff5e894a000 - 0x7ff5e9d4a000
+create enclave
+lue created
+eidx: 0x4
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+enclave finished
+__CLIENT_RC=0
+ssh_rc=0  wall_ms=1753
+--- serial console since step start (SM/runtime/kernel) ---
+[INFO] pmp fault num: 0
+[INFO] enclave pause num: 0
+[INFO] Cleaning enclave 4
+[INFO] [SM] Enclave 4 cleaned
+
+[guest]$ sudo timeout 300 ./client -c config.toml ./hello   (output -> logs/G09_enclave_smoke_20261028T055959Z_T1_hello_run3.log)
+alloc size: 0x1400000
+fd: 3
+command: 0x40106b01
+mmap fd: 4
+size: 20971520
+mmap addr: 0x7ff8ec90a000
+memory region: 0x7ff8ec90a000 - 0x7ff8edd0a000
+create enclave
+lue created
+eidx: 0x5
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+enclave finished
+__CLIENT_RC=0
+ssh_rc=0  wall_ms=1678
+--- serial console since step start (SM/runtime/kernel) ---
+[INFO] pmp fault num: 0
+[INFO] enclave pause num: 0
+[INFO] Cleaning enclave 5
+[INFO] [SM] Enclave 5 cleaned
+
+==================== 5. Guest health after runs ====================
+
+[guest]$ pgrep -af "[c]lient --lse"; cat ~/lattice/lse.out | tail -5
+1465 ./client --lse -c config.toml
+mmap addr: 0x7ffe9952e000
+memory region: 0x7ffe9952e000 - 0x7ffe9953d000
+create enclave
+lse created
+eidx: 0x2
+(exit=0)
+
+[guest]$ sudo dmesg | grep -iE "teectl|Oops|BUG|panic|lockup|stall" | tail -30
+[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-7.0.0-31-generic root=LABEL=cloudimg-rootfs ro efi=debug earlycon
+[    9.142719] systemd[1]: Mounting sys-kernel-debug.mount - Kernel Debug File System...
+[   56.841856] teectl: loading out-of-tree module taints kernel.
+[   56.842958] teectl: module verification failed: signature and/or required key missing - tainting kernel
+[   59.978865] [teectl] 16 pages needed
+[   67.253321] [teectl] 5120 pages needed
+[   67.313345] [teectl] free region, size: 20971520
+[   71.015657] [teectl] 5120 pages needed
+[   71.082006] [teectl] free region, size: 20971520
+[   74.745782] [teectl] 5120 pages needed
+[   74.798043] [teectl] free region, size: 20971520
+(exit=0)
+
+[guest]$ sudo dmesg --level=err,crit,alert,emerg | tail -10
+(exit=0)
+
+[guest]$ free -m | head -2; uptime
+               total        used        free      shared  buff/cache   available
+Mem:            3900         292        3393           0         359        3608
+ 06:01:37 up 1 min,  2 users,  load average: 1.21, 0.44, 0.16
+(exit=0)
+
+==================== 6. Shutdown ====================
+vm_stop: graceful poweroff timed out -> HMP quit
+
+==================== 7. Serial console: SM / fault lines ====================
+794:         Starting [0;1;39mlxd-installer.socket[0m - He…er to install lxd snap on demand...
+798:[[0;32m  OK  [0m] Listening on [0;1;39mlxd-installer.socket[0m …lper to install lxd snap on demand.
+822:[[0;32m  OK  [0m] Started [0;1;39mupdate-notifier-download.t…[0mhat failed at package install time.
+872:[INFO] enclave pause num: 0
+873:[INFO] Cleaning enclave 3
+874:[INFO] [SM] Enclave 3 cleaned
+876:[INFO] enclave pause num: 0
+877:[INFO] Cleaning enclave 4
+878:[INFO] [SM] Enclave 4 cleaned
+880:[INFO] enclave pause num: 0
+881:[INFO] Cleaning enclave 5
+882:[INFO] [SM] Enclave 5 cleaned
+901:[[0;32m  OK  [0m] Stopped [0;1;39mupdate-notifier-download.t…[0mhat failed at package install time.
+968:[[0;32m  OK  [0m] Closed [0;1;39mlxd-installer.socket[0m - Helper to install lxd snap on demand.
+
+==================== SUMMARY ====================
+[PASS] QEMU started
+[PASS] SSH up after 46 s
+[PASS] stage copied
+[PASS] stage checksums verified in guest
+[PASS] teectl.ko built + loaded
+[PASS] LSE created and holder process alive
+[PASS] T1_hello_run1: LUE created (SM create_lue)
+[PASS] T1_hello_run1: enclave write() proxied to host
+[PASS] T1_hello_run1: enclave computation correct
+[PASS] T1_hello_run1: enclave exited cleanly
+[PASS] T1_hello_run1: client exit code 0
+[PASS] T1_hello_run2: LUE created (SM create_lue)
+[PASS] T1_hello_run2: enclave write() proxied to host
+[PASS] T1_hello_run2: enclave computation correct
+[PASS] T1_hello_run2: enclave exited cleanly
+[PASS] T1_hello_run2: client exit code 0
+[PASS] T1_hello_run3: LUE created (SM create_lue)
+[PASS] T1_hello_run3: enclave write() proxied to host
+[PASS] T1_hello_run3: enclave computation correct
+[PASS] T1_hello_run3: enclave exited cleanly
+[PASS] T1_hello_run3: client exit code 0
+[PASS] no Oops/lockup/stall in guest after runs
+[PASS] VM stopped
+
+RESULT: FAIL=0 WARN=0

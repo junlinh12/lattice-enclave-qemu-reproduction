@@ -1,0 +1,119 @@
+
+==================== META ====================
+gate=G12 (v2) timestamp_utc=20261028T073735Z publish_identity=junlinh12 <<EMAIL>>
+secret tokens loaded for scanning: 7 (values not shown)
+
+==================== 1. Prerequisites ====================
+
+==================== 2. Allowlist .gitignore + git init ====================
+
+$ cat .gitignore
+# Allowlist: everything is ignored unless explicitly listed below.
+/*
+!/.gitignore
+!/README.md
+!/docs/
+!/scripts/
+!/patches/
+!/tests/
+!/logs/
+!/env.sh
+!/fw_params.env
+!/SOURCES_PINNED.txt
+# Never publish: artifacts of an earlier, unsanitized attempt
+/scripts/GATE0*
+/logs/GATE0*
+/logs/.*
+/logs/*_raw.log
+# build outputs inside allowed dirs
+/tests/**/*.o
+(exit=0)
+
+==================== 3. Files that would be committed ====================
+docs/REPORT.md
+env.sh
+fw_params.env
+.gitignore
+logs/G01_host_env_20261026T123105Z.log
+logs/G02_fetch_pin_20261026T124504Z.log
+logs/G03_prepare_workspace_20261026T125712Z.log
+logs/G04_build_sm_20261026T130113Z.log
+logs/G04_build_sm_20261026T130918Z.log
+logs/G04_build_sm_20261026T131039Z_cargo_debug.log
+logs/G04_build_sm_20261026T131039Z_cargo_release.log
+logs/G04_build_sm_20261026T131039Z.log
+logs/G05_build_fw_20261026T131039Z_fw_pass1.log
+logs/G05_build_fw_20261026T131039Z.log
+logs/G05_build_fw_20261026T131039Z_qemu_smoke.log
+logs/G05_build_fw_20261026T131039Z_uboot.log
+logs/G06_guest_rootfs_20261028T033415Z.log
+logs/G07_first_boot_20261028T035507Z.log
+logs/G07_first_boot_20261028T035507Z_serial.log
+logs/G07_first_boot_20261028T040026Z.log
+logs/G07_first_boot_20261028T040026Z_serial.log
+logs/G08_userland_module_20261028T053046Z_client.log
+logs/G08_userland_module_20261028T053046Z.log
+logs/G08_userland_module_20261028T053046Z_runtime.log
+logs/G08_userland_module_20261028T053046Z_serial.log
+logs/G08_userland_module_20261028T053046Z_test_launcher.log
+logs/G09_enclave_smoke_20261028T054214Z.log
+logs/G09_enclave_smoke_20261028T054214Z_serial.log
+logs/G09_enclave_smoke_20261028T054214Z_T1_hello_run1.log
+logs/G09_enclave_smoke_20261028T055117Z.log
+logs/G09_enclave_smoke_20261028T055117Z_serial.log
+logs/G09_enclave_smoke_20261028T055117Z_T1_hello_run1.log
+logs/G09_enclave_smoke_20261028T055959Z.log
+logs/G09_enclave_smoke_20261028T055959Z_serial.log
+logs/G09_enclave_smoke_20261028T055959Z_T1_hello_run1.log
+logs/G09_enclave_smoke_20261028T055959Z_T1_hello_run2.log
+logs/G09_enclave_smoke_20261028T055959Z_T1_hello_run3.log
+logs/G10_eval_20261028T061245Z_cpu_state.log
+logs/G10_eval_20261028T061245Z.log
+logs/G10_eval_20261028T061245Z_results.csv
+logs/G10_eval_20261028T061245Z_serial.log
+logs/G11_fix_20261028T071845Z_fw_build.log
+logs/G11_fix_20261028T071845Z.log
+logs/G11_fix_20261028T071845Z_serial.log
+logs/G12_publish_audit_20261028T072659Z.log
+logs/G12_publish_audit_20261028T073735Z.log
+logs/GATE_LEDGER.md
+patches/lattice/0001-repro-workspace-drop-missing-tests-member-exclude-ht.patch
+patches/lattice/0002-repro-add-Cargo.lock-generated-with-nightly-2024-11-.patch
+patches/lattice/0003-repro-sm-reserve-SM-heap-and-PMA-region-in-the-devic.patch
+README.md
+scripts/G01_host_env_check.sh
+scripts/G02_fetch_and_pin_sources.sh
+scripts/G03_prepare_workspace.sh
+scripts/G04_build_security_monitor.sh
+scripts/G05_build_firmware.sh
+scripts/G06_prepare_guest_rootfs.sh
+scripts/G07_first_boot_linux.sh
+scripts/G08_build_userland_and_module.sh
+scripts/G09_enclave_smoke_test.sh
+scripts/G10_eval_and_checkpoint.sh
+scripts/G11_fix_sm_reserved_memory.sh
+scripts/G12_sanitize_and_commit.sh
+scripts/lib/vm.sh
+SOURCES_PINNED.txt
+tests/enclave/bench.c
+tests/enclave/empty.c
+tests/enclave/hello.c
+tests/tools/memfill.c
+tests/tools/pagemap.py
+count=70  total=11M
+
+==================== 4. Leak scan ====================
+scan: files=70 fail_hits=0 warn_hits=0
+
+==================== SUMMARY ====================
+[PASS] README.md present
+[PASS] docs/REPORT.md present
+[PASS] ledger present
+[PASS] git repository exists
+[PASS] repo-local identity set to GitHub noreply
+[PASS] no sources/work/tools/GATE0 artifacts in candidate list
+[PASS] no file > 5 MB
+[PASS] no secret token / key / MAC / e-mail found
+[INFO] G01 log contains host hardware details (CPU model, disk device/usage). Not personal; kept for reproducibility. Tell Claude if you want them masked.
+
+RESULT: FAIL=0 WARN=0

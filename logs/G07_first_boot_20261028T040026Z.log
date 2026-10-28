@@ -1,0 +1,207 @@
+
+==================== META ====================
+gate=G07 timestamp_utc=20261028T040026Z timeout=7200s
+
+==================== 1. Pre-flight ====================
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_payload.bin
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/images/seed.img
+ok      $HOME/projects/lattice-enclave-qemu-reproduction/work/guest/id_ed25519
+fw_payload.bin sha256=f52cbc9c0ba6c41e07f2aee28b022dc5801bc44102a527f008f75687da8a2a98 (G05 artifact: f52cbc9c0ba6c41e07f2aee28b022dc5801bc44102a527f008f75687da8a2a98)
+
+$ qemu-system-riscv64 --version | head -1
+QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)
+(exit=0)
+QEMU command line:
+    qemu-system-riscv64
+    -machine
+    virt
+    -m
+    4096M
+    -smp
+    4
+    -bios
+    $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_payload.bin
+    -drive
+    file=$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img,format=raw,if=virtio
+    -drive
+    file=$HOME/projects/lattice-enclave-qemu-reproduction/work/images/seed.img,format=raw,if=virtio,readonly=on
+    -netdev
+    user,id=net0,hostfwd=tcp:<IPV4>:10022-:22
+    -device
+    virtio-net-pci,netdev=net0
+    -display
+    none
+    -serial
+    file:$HOME/projects/lattice-enclave-qemu-reproduction/logs/G07_first_boot_20261028T040026Z_serial.log
+    -monitor
+    unix:$HOME/projects/lattice-enclave-qemu-reproduction/work/run/monitor.sock,server,nowait
+    -daemonize
+    -pidfile
+    $HOME/projects/lattice-enclave-qemu-reproduction/work/run/qemu.pid
+
+==================== 2. Start VM ====================
+
+==================== 3. Follow serial console (poll 20s, max 7200s) ====================
+  [+   20s] milestone: OpenSBI banner (M-mode firmware)
+  [+   20s] milestone: U-Boot (S-mode) reached -> SM handed off
+  [+   20s] milestone: Linux kernel started
+  [+   20s] milestone: secondary harts brought up (SBI HSM through SM)
+  [+   60s] milestone: getty login prompt
+  [+  160s] milestone: cloud-init finished (headers installed)
+
+==================== 3b. Milestones ====================
+  opensbi  +   20s  OpenSBI banner (M-mode firmware)
+  uboot    +   20s  U-Boot (S-mode) reached -> SM handed off
+  linux    +   20s  Linux kernel started
+  smp      +   20s  secondary harts brought up (SBI HSM through SM)
+  login    +   60s  getty login prompt
+  cidone   +  160s  cloud-init finished (headers installed)
+SM/OpenSBI 'hart N started' messages: 2 (expected 4: boot hart + secondaries)
+
+==================== 4. Guest inspection over SSH ====================
+
+[guest]$ uname -a; grep -E "^(PRETTY_NAME|VERSION_ID)" /etc/os-release
+Linux lattice-guest 7.0.0-31-generic #31.1~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 25 15:43:59 UTC riscv64 riscv64 riscv64 GNU/Linux
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+VERSION_ID="24.04"
+(exit=0)
+
+[guest]$ nproc; free -m | head -2; df -h / | tail -1
+4
+               total        used        free      shared  buff/cache   available
+Mem:            3900         322        2652           0        1087        3578
+/dev/vda1        31G  3.2G   28G  11% /
+(exit=0)
+
+[guest]$ grep -E "^(isa|mmu|hart)" /proc/cpuinfo | sort | uniq -c
+      1 hart		: 0
+      1 hart		: 1
+      1 hart		: 2
+      1 hart		: 3
+      4 hart isa	: rv64imafdch_zicbom_zicboz_zicntr_zicsr_zifencei_zihintntl_zihintpause_zihpm_zaamo_zalrsc_zawrs_zfa_zca_zcd_zba_zbb_zbc_zbs_sstc_svadu
+      4 isa		: rv64imafdch_zicbom_zicboz_zicntr_zicsr_zifencei_zihintntl_zihintpause_zihpm_zaamo_zalrsc_zawrs_zfa_zca_zcd_zba_zbb_zbc_zbs_sstc_svadu
+      4 mmu		: sv48
+(exit=0)
+
+[guest]$ cat /proc/cmdline
+BOOT_IMAGE=/boot/vmlinuz-7.0.0-31-generic root=LABEL=cloudimg-rootfs ro efi=debug earlycon
+(exit=0)
+
+[guest]$ cloud-init status --long 2>/dev/null | head -8
+status: done
+extended_status: done
+boot_status_code: enabled-by-generator
+last_update: Thu, 01 Jan 1970 00:02:22 +0000
+detail: DataSourceNoCloud [seed=/var/lib/cloud/seed/nocloud-net,/dev/vdb]
+errors: []
+recoverable_errors: {}
+(exit=0)
+
+[guest]$ gcc --version | head -1; make --version | head -1
+gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+GNU Make 4.3
+(exit=0)
+
+[guest]$ sudo dmesg | grep -iE "sbi|smp:|riscv: |pmp|Machine model|Memory:" | head -40
+[    0.000000] Machine model: riscv-virtio,qemu
+[    0.000000] SBI specification v2.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10005
+[    0.000000] SBI TIME extension detected
+[    0.000000] SBI IPI extension detected
+[    0.000000] SBI RFENCE extension detected
+[    0.000000] SBI SRST extension detected
+[    0.000000] SBI DBCN extension detected
+[    0.000000] SBI HSM extension detected
+[    0.000000] riscv: base ISA extensions acdfhim
+[    0.000000] riscv: ELF capabilities acdfim
+[    0.000000] riscv: providing IPIs using SBI IPI extension
+[    0.048580] smp: Bringing up secondary CPUs ...
+[    0.058507] smp: Brought up 1 node, 4 CPUs
+[    0.061619] Memory: 3872632K/4194304K available (14941K kernel code, 8287K rwdata, 14336K rodata, 7234K init, 1119K bss, 281516K reserved, 32768K cma-reserved)
+[    0.487623] riscv-pmu-sbi: SBI PMU extension is available
+[    0.487964] riscv-pmu-sbi: 16 firmware and 18 hardware counters
+[    0.488043] riscv-pmu-sbi: Perf sampling/filtering is not supported as sscof extension is not available
+[    1.190402] Freeing initrd memory: 74124K
+[    1.531544] Freeing unused kernel image (initmem) memory: 7232K
+(exit=0)
+
+[guest]$ sudo dmesg --level=err,crit,alert,emerg | tail -20
+(exit=0)
+
+[guest]$ systemctl --failed --no-legend | head
+(exit=0)
+
+==================== 5. Clean shutdown ====================
+vm_stop: guest powered off
+total_elapsed_sec=201
+
+==================== 6. Serial console excerpt (full: logs/G07_first_boot_20261028T040026Z_serial.log) ====================
+OpenSBI v1.5-51-gef4520b1
+Domain0 Boot HART         : 1
+Domain0 Region00          : 0x0000000000100000-0x0000000000100fff M: (I,R,W) S/U: (R,W)
+Domain0 Region01          : 0x0000000010000000-0x0000000010000fff M: (I,R,W) S/U: (R,W)
+Domain0 Region02          : 0x0000000002000000-0x000000000200ffff M: (I,R,W) S/U: ()
+Domain0 Region03          : 0x0000000080080000-0x000000008009ffff M: (R,W) S/U: ()
+Domain0 Region04          : 0x0000000080000000-0x000000008007ffff M: (R,X) S/U: ()
+Domain0 Region05          : 0x000000000c400000-0x000000000c5fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region06          : 0x000000000c000000-0x000000000c3fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region07          : 0x0000000000000000-0xffffffffffffffff M: () S/U: (R,W,X)
+Boot HART ID              : 1
+Boot HART Domain          : root
+Boot HART Priv Version    : v1.12
+Boot HART Base ISA        : rv64imafdch
+Boot HART ISA Extensions  : sstc,zicntr,zihpm,zicboz,zicbom,sdtrig,svadu
+Boot HART PMP Count       : 16
+Boot HART PMP Granularity : 2 bits
+Boot HART PMP Address Bits: 54
+Boot HART MHPM Info       : 16 (0x0007fff8)
+Boot HART Debug Triggers  : 2 triggers
+Boot HART MIDELEG         : 0x0000000000001666
+Boot HART MEDELEG         : 0x0000000000f0b509
+hart 1 started
+U-Boot 2024.10 (Oct 26 2026 - 22:10:42 +0900)
+Booting: virtio 0
+      before booting or `c' for a command-line.                            *Ubuntu                                                                      Advanced options for Ubuntu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        The highlighted entry will be executed automatically in 10s.                   The highlighted entry will be executed automatically in 9s.                    The highlighted entry will be executed automatically in 8s.                    The highlighted entry will be executed automatically in 7s.                    The highlighted entry will be executed automatically in 6s.                    The highlighted entry will be executed automatically in 5s.                    The highlighted entry will be executed automatically in 4s.                    The highlighted entry will be executed automatically in 3s.                    The highlighted entry will be executed automatically in 2s.                    The highlighted entry will be executed automatically in 1s.                    The highlighted entry will be executed automatically in 0s.                   Booting `Ubuntu'
+EFI stub: Booting Linux Kernel...
+EFI stub: EFI_RNG_PROTOCOL unavailable
+EFI stub: Loaded initrd from LINUX_EFI_INITRD_MEDIA_GUID device path
+EFI stub: Using DTB from configuration table
+EFI stub: Exiting boot services...
+[    0.000000] Booting Linux on hartid 1
+[    0.000000] Linux version 7.0.0-31-generic (buildd@bos03-riscv64-039) (riscv64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #31.1~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 25 15:43:59 UTC (Ubuntu 7.0.0-31.31.1~24.04.1-generic 7.0.14)
+[    0.000000] Machine model: riscv-virtio,qemu
+[    0.000000] SBI specification v2.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10005
+hart 0 startedhart 2 startedhart 3 started[    0.000000] Booting Linux on hartid 1
+[    0.000000] Linux version 7.0.0-31-generic (buildd@bos03-riscv64-039) (riscv64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #31.1~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 25 15:43:59 UTC (Ubuntu 7.0.0-31.31.1~24.04.1-generic 7.0.14)
+[    0.000000] Machine model: riscv-virtio,qemu
+[    0.000000] SBI specification v2.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10005
+[    0.048580] smp: Bringing up secondary CPUs ...
+[    0.058507] smp: Brought up 1 node, 4 CPUs
+[    0.061619] Memory: 3872632K/4194304K available (14941K kernel code, 8287K rwdata, 14336K rodata, 7234K init, 1119K bss, 281516K reserved, 32768K cma-reserved)
+[    1.538138] Run /init as init process
+[    6.974693] systemd[1]: Detected virtualization qemu.
+[    6.974828] systemd[1]: Detected architecture riscv64.
+lattice-guest login: [   42.003719] cloud-init[1028]: Cloud-init v. 26.1-0ubuntu1~24.04.1 running 'modules:final' at Wed, 28 Oct 2026 04:01:20 +0000. Up 41.76 seconds.
+[  142.320724] cloud-init[1028]: LATTICE_CLOUD_INIT_DONE after 142.31 seconds
+
+==================== SUMMARY ====================
+[PASS] inputs present
+[PASS] firmware == G05 verified build
+[PASS] QEMU started (pid 40070)
+[PASS] boot: OpenSBI banner (M-mode firmware) (+20s)
+[PASS] boot: U-Boot (S-mode) reached -> SM handed off (+20s)
+[PASS] boot: Linux kernel started (+20s)
+[PASS] boot: secondary harts brought up (SBI HSM through SM) (+20s)
+[PASS] boot: getty login prompt (+60s)
+[PASS] boot: cloud-init finished (headers installed) (+160s)
+[WARN] only 2 hart-start messages
+[PASS] no panic/oops/trap-error on console
+[PASS] SSH login with project key
+[PASS] kernel headers for running kernel installed (/lib/modules/$(uname -r)/build)
+[PASS] kernel brought up all 4 CPUs (dmesg)
+[PASS] VM stopped
+
+RESULT: FAIL=0 WARN=1

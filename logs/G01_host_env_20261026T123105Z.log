@@ -1,0 +1,279 @@
+
+==================== META ====================
+gate=G01  timestamp_utc=20261026T123105Z  script=G01_host_env_check.sh
+
+==================== 1. OS / Kernel ====================
+
+$ grep -E '^(PRETTY_NAME|VERSION_ID)=' /etc/os-release
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+VERSION_ID="24.04"
+(exit=0)
+
+$ uname -srm
+Linux 7.0.0-38-generic x86_64
+(exit=0)
+
+==================== 2. CPU / Memory / Disk ====================
+
+$ lscpu | grep -E '^(Architecture|Model name|Socket|Core|Thread|CPU\(s\)|Virtualization)'
+Architecture:                            x86_64
+CPU(s):                                  20
+Model name:                              Intel(R) Core(TM) Ultra 7 265K
+Thread(s) per core:                      1
+Core(s) per socket:                      20
+Socket(s):                               1
+CPU(s) scaling MHz:                      58%
+Virtualization:                          VT-x
+(exit=0)
+
+$ nproc
+20
+(exit=0)
+
+$ free -h
+               total        used        free      shared  buff/cache   available
+Mem:            30Gi       8.1Gi        19Gi       1.7Gi       5.7Gi        22Gi
+Swap:          8.0Gi          0B       8.0Gi
+(exit=0)
+
+$ swapon --show
+NAME      TYPE SIZE USED PRIO
+/swap.img file   8G   0B   -1
+(exit=0)
+
+$ df -hT "$HOME" /tmp
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/nvme0n1p2 ext4  915G  371G  499G  43% /
+/dev/nvme0n1p2 ext4  915G  371G  499G  43% /
+(exit=0)
+
+==================== 3. Base build tools ====================
+git        git version 2.43.0
+make       GNU Make 4.3
+gcc        gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+g++        g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+python3    Python 3.12.3
+bc         bc 1.07.1
+bison      bison (GNU Bison) 3.8.2
+flex       flex 2.6.4
+dtc        Version: DTC 1.7.0
+cpio       cpio (GNU cpio) 2.15
+rsync      rsync  version 3.2.7  protocol version 31
+curl       curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.10
+wget       GNU Wget 1.21.4 built on linux-gnu.
+xz         xz (XZ Utils) 5.4.5
+zstd       *** Zstandard CLI (64-bit) v1.5.5, by Yann Collet ***
+qemu-img   qemu-img version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)
+
+==================== 3b. Relevant apt packages ====================
+
+$ dpkg-query -W -f='${Status} ${Package} ${Version}\n' build-essential libssl-dev libgnutls28-dev python3-dev swig python3-setuptools python3-pyelftools device-tree-compiler u-boot-tools gcc-riscv64-linux-gnu binutils-riscv64-linux-gnu qemu-system-misc qemu-utils debootstrap libglib2.0-dev libpixman-1-dev ninja-build pkg-config 2>&1 | sed 's/^install ok installed/OK /'
+OK  binutils-riscv64-linux-gnu 2.42-4ubuntu2.10
+OK  build-essential 12.10ubuntu1
+unknown ok not-installed debootstrap 
+OK  device-tree-compiler 1.7.0-2build1
+OK  gcc-riscv64-linux-gnu 4:13.2.0-7ubuntu1
+OK  libglib2.0-dev 2.80.0-6ubuntu3.9
+OK  libgnutls28-dev 3.8.3-1.1ubuntu3.6
+OK  libpixman-1-dev 0.42.2-1build1
+OK  libssl-dev 3.0.13-0ubuntu3.16
+OK  ninja-build 1.11.1-2
+OK  pkg-config 1.8.1-2build1
+OK  python3-dev 3.12.3-0ubuntu2.1
+OK  python3-pyelftools 0.30-1
+OK  python3-setuptools 68.1.2-2ubuntu1.2
+OK  qemu-system-misc 1:8.2.2+ds-0ubuntu1.18
+OK  qemu-utils 1:8.2.2+ds-0ubuntu1.18
+OK  swig 4.2.0-2ubuntu1
+OK  u-boot-tools 2025.10-0ubuntu0.24.04.4
+(exit=0)
+
+==================== 4. RISC-V cross toolchain (firmware.mk default: riscv64-unknown-linux-gnu-) ====================
+
+$ type -a riscv64-unknown-linux-gnu-gcc riscv64-linux-gnu-gcc riscv64-unknown-elf-gcc
+bash: line 1: type: riscv64-unknown-linux-gnu-gcc: not found
+riscv64-linux-gnu-gcc is /usr/bin/riscv64-linux-gnu-gcc
+riscv64-linux-gnu-gcc is /bin/riscv64-linux-gnu-gcc
+riscv64-unknown-elf-gcc is /usr/bin/riscv64-unknown-elf-gcc
+riscv64-unknown-elf-gcc is /bin/riscv64-unknown-elf-gcc
+(exit=1)
+
+$ riscv64-linux-gnu-gcc --version | head -1
+riscv64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+(exit=0)
+
+$ riscv64-linux-gnu-objcopy --version | head -1
+GNU objcopy (GNU Binutils for Ubuntu) 2.42
+(exit=0)
+
+==================== 5. QEMU ====================
+
+$ type -a qemu-system-riscv64
+qemu-system-riscv64 is /usr/bin/qemu-system-riscv64
+qemu-system-riscv64 is /bin/qemu-system-riscv64
+(exit=0)
+
+$ qemu-system-riscv64 --version | head -1
+QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)
+(exit=0)
+
+$ qemu-system-riscv64 -machine help | grep -E '^virt'
+virt                 RISC-V VirtIO board
+(exit=0)
+
+==================== 6. Rust (rust-toolchain.toml: nightly-2024-11-27) ====================
+
+$ rustup --version
+rustup 1.29.1 (d95a37b6a 2026-08-13)
+info: This is the version for the rustup toolchain manager, not the rustc compiler.
+info: the currently active `rustc` version is `rustc 1.98.1 (48a229cea 2026-09-01)`
+(exit=0)
+
+$ rustup toolchain list
+stable-x86_64-unknown-linux-gnu (active, default)
+nightly-2024-11-27-x86_64-unknown-linux-gnu
+(exit=0)
+
+$ cargo --version
+cargo 1.98.1 (797e8a9bc 2026-08-05)
+(exit=0)
+
+$ rustup target list --installed --toolchain nightly-2024-11-27
+riscv64gc-unknown-linux-gnu
+riscv64imac-unknown-none-elf
+x86_64-unknown-linux-gnu
+(exit=0)
+
+$ rustup component list --installed --toolchain nightly-2024-11-27
+cargo-x86_64-unknown-linux-gnu
+clippy-x86_64-unknown-linux-gnu
+llvm-tools-x86_64-unknown-linux-gnu
+rust-src
+rust-std-riscv64gc-unknown-linux-gnu
+rust-std-riscv64imac-unknown-none-elf
+rust-std-x86_64-unknown-linux-gnu
+rustc-x86_64-unknown-linux-gnu
+rustfmt-x86_64-unknown-linux-gnu
+(exit=0)
+
+==================== 7. Optional: container & GitHub tooling ====================
+docker    not installed
+podman    not installed
+gh        not installed
+gitleaks  not installed
+
+==================== 8. Upstream reachability (read-only ls-remote) ====================
+reachable   https://github.com/LatticeEnclave/Lattice
+reachable   https://github.com/riscv-software-src/opensbi
+reachable   https://github.com/u-boot/u-boot
+
+$ timeout 30 git ls-remote https://github.com/LatticeEnclave/Lattice HEAD
+05664a26af63e0898828a37b4387efc188388dbf	HEAD
+(exit=0)
+reference upstream commit used for this plan: 05664a26af63e0898828a37b4387efc188388dbf
+reference OpenSBI commit (firmware.mk):       ef4520b1c63fc2770b10d952a800f9734f861b0a
+
+==================== 9. Current project folder state (names only) ====================
+
+$ find "$HOME/projects/lattice-enclave-qemu-reproduction" -maxdepth 3 -printf '%y %TY-%Tm-%Td %8s %P\n' | sort -k3
+f 2026-10-23        0 logs/.gate0d1_lattice_preserve.lock
+f 2026-10-23        0 logs/.gate0d2_path_audit.lock
+f 2026-10-23        0 logs/.gate0d2r_targeted.lock
+f 2026-10-23        0 logs/.gate0d3a_readonly_audit.lock
+f 2026-10-23        0 logs/.gate0d3b_readonly_audit.lock
+f 2026-10-23        0 logs/.gate0d3d_build_dependency_audit.lock
+f 2026-10-23        0 logs/.gate0d3e_final_predelete_readonly.lock
+f 2026-10-23    10162 logs/GATE0D2F_Reference_Repair_20261023T110238Z_pid137395_BE34RXvx_raw.log
+f 2026-10-26    10997 scripts/G01_host_env_check.sh
+f 2026-10-23    11480 scripts/GATE0C_PreDelete_Scope_Audit_v2.sh
+f 2026-10-23    11716 scripts/GATE0D2F_Repair_Confirmed_Legacy_References.sh
+f 2026-09-19    11757 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411/04_qemu-host-audit-v2.sh.original
+f 2026-10-23    11796 logs/GATE0D3B_Shell_Process_Closure_20261023T114743Z_pid139051_gL3jdQEH_raw.log
+f 2026-10-23    11823 logs/GATE0D2_PostPreserve_Path_20261023T104934Z_pid136916_3QByqUSX_raw.log
+f 2026-10-23    12228 scripts/GATE0D1_Preserve_Lattice_Trees_Copy_Verify.sh
+f 2026-10-23    12763 scripts/GATE0D3C_Live_Login_Environment_Verification.sh
+f 2026-10-23    12874 logs/GATE0D3E_PreDelete_Closure_20261023T130935Z_pid145433_DgLtwq34_raw.log
+f 2026-10-23    12983 logs/GATE0B_Host_Baseline_20261023T091234Z_pid131328_raw.log
+f 2026-10-23    13451 scripts/GATE0D3C_R1_Live_Login_Environment_Retest.sh
+f 2026-10-23       13 .gitignore
+f 2026-10-23    14586 scripts/GATE0D3C_R2_PTY_Interactive_Login_Diagnostic.sh
+f 2026-10-23    15634 scripts/GATE0D3B_Targeted_Shell_Process_Closure_ReadOnly.sh
+f 2026-10-23    16180 scripts/GATE0D2_PostPreserve_Path_Dependency_Audit_ReadOnly.sh
+f 2026-10-23    17973 scripts/GATE0D3D_PreDelete_Preserved_Build_Dependency_Audit_ReadOnly.sh
+f 2026-10-23    20470 logs/GATE0D3C_R2_PTY_Login_20261023T124358Z_pid143946_LlW6jkZ9_raw.log
+f 2026-10-23    20717 scripts/GATE0D3E_Final_PreDelete_Closure_DryRun_ReadOnly.sh
+f 2026-10-23    21159 scripts/GATE0D3A_PreDelete_Active_Dependency_Inventory_ReadOnly.sh
+f 2026-09-19     2224 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411/05_hlog.original
+f 2026-10-23    24724 logs/GATE0C_PreDelete_Scope_20261023T094825Z_pid132214_xXC7np_raw.log
+f 2026-10-10     3353 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411/06_logging.sh.original
+f 2026-10-23    39721 logs/GATE0D3D_Build_Dependency_20261023T125817Z_pid144768_zwhzVmHl_raw.log
+d 2026-10-23     4096 
+d 2026-10-26     4096 logs
+f 2026-10-26     4096 logs/G01_host_env_20261026T123105Z.log
+d 2026-10-23     4096 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411
+d 2026-10-26     4096 scripts
+f 2026-09-19     4528 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411/03_qemu-host-audit.sh.original
+f 2026-09-24      631 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411/01_user-dirs.dirs.original
+f 2026-10-23     7000 logs/GATE0D2R_Targeted_References_20261023T105355Z_pid137109_kPNocrJe_raw.log
+f 2026-10-23     7411 logs/GATE0D1_Lattice_Preserve_20261023T104310Z_pid136143_BznMV0SZ_raw.log
+f 2026-10-23     7431 logs/GATE0D4_Exact_Delete_20261023T132216Z_pid145846_vSseRiqQ_raw.log
+f 2026-10-23     7624 scripts/GATE0B_Host_Baseline_Audit.sh
+f 2026-09-19      762 logs/.gate0d2f_repair_backup_20261023T110238Z_pid137411/02_check-after-chrome-close.sh.original
+f 2026-10-23     7813 scripts/GATE0D4_Execute_Approved_17_Delete.sh
+f 2026-10-23     8721 scripts/GATE0D2R_Targeted_Legacy_Reference_Inspection_ReadOnly.sh
+f 2026-10-23    88431 logs/GATE0D3A_PreDelete_Dependencies_20261023T113750Z_pid138722_ZsOi9uiZ_raw.log
+f 2026-10-23     9441 logs/GATE0D3C_Live_Login_20261023T115749Z_pid140956_uIkffp4C_raw.log
+f 2026-10-23     9692 logs/GATE0D3C_R1_Live_Login_20261023T120155Z_pid141329_jKAw6hmd_raw.log
+(exit=0)
+
+$ du -sh "$HOME/projects/lattice-enclave-qemu-reproduction"
+580K	$HOME/projects/lattice-enclave-qemu-reproduction
+(exit=0)
+
+==================== 10. Prior Lattice source (reference only, not modified) ====================
+
+$ git -C "$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice" rev-parse HEAD
+707e66e74d512ce0c6f10421bcc3537b89b1c3ef
+(exit=0)
+
+$ git -C "$HOME/Lattice/Lattice-Reproduction-V1/source/Lattice" status --short | wc -l
+0
+(exit=0)
+
+==================== SUMMARY ====================
+[PASS] OS: Ubuntu 24.04
+[PASS] CPU threads: 20
+[PASS] RAM: 30 GiB
+[PASS] Free disk on $HOME: 499 GiB
+[PASS] tool: git
+[PASS] tool: make
+[PASS] tool: gcc
+[PASS] tool: g++
+[PASS] tool: python3
+[PASS] tool: bc
+[PASS] tool: bison
+[PASS] tool: flex
+[PASS] tool: dtc
+[PASS] tool: cpio
+[PASS] tool: rsync
+[PASS] tool: curl
+[PASS] tool: wget
+[PASS] tool: xz
+[PASS] tool: zstd
+[PASS] tool: qemu-img
+[WARN] cross: only riscv64-linux-gnu- found (usable via CROSS_COMPILE=riscv64-linux-gnu-)
+[PASS] qemu-system-riscv64 present
+[PASS] rust toolchain nightly-2024-11-27 installed
+[PASS] rust target riscv64imac-unknown-none-elf
+[PASS] rust target riscv64gc-unknown-linux-gnu
+[PASS] rust component rust-src
+[PASS] rust component rustfmt
+[PASS] rust component clippy
+[PASS] rust component llvm-tools
+[WARN] git global user.email is a real address -> use a GitHub noreply address before publishing
+[PASS] reachable: https://github.com/LatticeEnclave/Lattice
+[PASS] reachable: https://github.com/riscv-software-src/opensbi
+[PASS] reachable: https://github.com/u-boot/u-boot
+[WARN] prior source HEAD differs from upstream (707e66e74d512ce0c6f10421bcc3537b89b1c3ef)
+
+RESULT: FAIL=0 WARN=3

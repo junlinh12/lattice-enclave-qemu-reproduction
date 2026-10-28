@@ -1,0 +1,309 @@
+
+==================== META ====================
+gate=G05 timestamp_utc=20261026T131039Z nproc=20
+
+==================== 0. CHECKPOINT (every 5 gates): MAIN_TASK.md ====================
+# MAIN TASK (re-read at every 5th gate)
+
+## Phase A - Reproduce on QEMU (host: Ubuntu 24.04)
+1. Lattice Enclave  - paper: doi 10.1145/3844614 / code: github.com/LatticeEnclave/Lattice
+2. IBM ACE          - paper: arXiv 2505.12995 / code: github.com/IBM/ACE-RISCV
+3. RISC-V OP-TEE    - code: gitlab.com/riseproject/riscv-optee
+
+## Phase B - Port all three TEEs to Milk-V Jupiter 2
+SpacemiT K3 SoC (RVA23), 32 GB RAM, 128 GB SSD
+
+## Requirements
+R1 Publish to github.com/junlinh12 only after sanitizing personal / host-local info.
+R2 One Project, One Log System: one log folder per project (Lattice: logs/).
+R3 Every 5 gates: re-read this file and confirm no drift from the main task.
+R4 Check host environment & resources before starting each new project.
+R5 All projects live under ~/projects; never upload host-specific local info.
+
+Current position: Phase A-1 (Lattice on QEMU) -> firmware build. Next: G06 rootfs, G07 Linux boot.
+
+--- gate ledger so far ---
+# Gate Ledger - lattice-enclave-qemu-reproduction
+
+Every 5th gate (G05, G10, ...) is a checkpoint: re-read ../../MAIN_TASK.md and
+record whether the current work still serves the main task.
+
+| Gate | Title | UTC time | Result | Log file | Checkpoint |
+|------|-------|----------|--------|----------|------------|
+| G01 | Host environment check | 20261026T123105Z | FAIL=0 WARN=3 | G01_host_env_20261026T123105Z.log | - |
+| G02 | Fetch & pin sources | 20261026T124504Z | FAIL=0 WARN=3 | G02_fetch_pin_20261026T124504Z.log | - |
+| G03 | Prepare build workspace | 20261026T125712Z | FAIL=0 WARN=0 | G03_prepare_workspace_20261026T125712Z.log | - |
+| G04 | Build security monitor (debug+release) | 20261026T130113Z | FAIL=2 WARN=0 | G04_build_sm_20261026T130113Z.log | - |
+| G04 | Build security monitor (debug+release) | 20261026T130918Z | FAIL=2 WARN=0 | G04_build_sm_20261026T130918Z.log | - |
+| G04 | Build security monitor (debug+release) | 20261026T131039Z | FAIL=0 WARN=0 | G04_build_sm_20261026T131039Z.log | - |
+
+$ qemu-system-riscv64 --version | head -1
+QEMU emulator version 8.2.2 (Debian 1:8.2.2+ds-0ubuntu1.18)
+(exit=0)
+
+==================== 1. Stage pinned sources into build/qemu-virt ====================
+
+$ git clone -q '$HOME/projects/lattice-enclave-qemu-reproduction/sources/opensbi' '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi' && git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi' -c advice.detachedHead=false checkout -q ef4520b1c63fc2770b10d952a800f9734f861b0a && git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi' apply '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/platform/qemu-virt/qemu.patch'
+Note: switching to 'ef4520b1c63fc2770b10d952a800f9734f861b0a'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi' status --short
+ M firmware/fw_base.S
+ M firmware/fw_base.ldS
+ M firmware/objects.mk
+ M lib/sbi/sbi_hart.c
+ M lib/sbi/sbi_hsm.c
+(exit=0)
+
+$ git clone -q '$HOME/projects/lattice-enclave-qemu-reproduction/sources/u-boot' '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/u-boot'
+Note: switching to 'f919c3a889f0ec7d63a48b5d0ed064386b0980bd'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+(exit=0)
+pre-created opensbi build/platform/generic/firmware/ (upstream rm -r workaround)
+
+==================== 2. Build U-Boot (same commands as firmware.mk, parallel) ====================
+
+$ cd '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/u-boot' && make CROSS_COMPILE=riscv64-unknown-linux-gnu- qemu-riscv64_smode_defconfig && make -j20 CROSS_COMPILE=riscv64-unknown-linux-gnu-
+(full output -> logs/G05_build_fw_20261026T131039Z_uboot.log)
+  OBJCOPY lib/efi_loader/smbiosdump.efi
+  OBJCOPY lib/efi_loader/initrddump.efi
+  LD      lib/efi_loader/dtbdump_efi.so
+  OBJCOPY lib/efi_loader/dtbdump.efi
+  AR      lib/efi_selftest/built-in.o
+  AR      lib/built-in.o
+  LD      u-boot
+  OBJCOPY u-boot.srec
+  OBJCOPY u-boot-nodtb.bin
+  SYM     u-boot.sym
+  COPY    u-boot.bin
+  DTC     arch/riscv/dts/qemu-virt32.dtb
+  DTC     arch/riscv/dts/qemu-virt64.dtb
+  SHIPPED dts/dt.dtb
+  OFCHK   .config
+(exit=0)
+uboot_build_time_sec=5
+
+==================== 3. Upstream firmware target (sm + opensbi), SM_TEXT_START=0x8001e000 ====================
+
+$ cd '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice' && CARGO_NET_OFFLINE=true make -f '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/platform/qemu-virt/firmware.mk' build_path='$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt' platform_path='$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/platform/qemu-virt' profile=release       SM_TEXT_START=0x8001e000 FW_TEXT_START=0x80000000 PMP_COUNT=16 firmware
+(full output -> logs/G05_build_fw_20261026T131039Z_fw_pass1.log)
+ OBJCOPY   platform/generic/firmware/payloads/test.bin
+ AS        platform/generic/firmware/fw_dynamic.o
+ CPP       platform/generic/firmware/fw_dynamic.elf.ld
+ ELF       platform/generic/firmware/fw_dynamic.elf
+ OBJCOPY   platform/generic/firmware/fw_dynamic.bin
+ AS        platform/generic/firmware/fw_jump.o
+ CPP       platform/generic/firmware/fw_jump.elf.ld
+ ELF       platform/generic/firmware/fw_jump.elf
+ OBJCOPY   platform/generic/firmware/fw_jump.bin
+ AS        platform/generic/firmware/fw_payload.o
+ CPP       platform/generic/firmware/fw_payload.elf.ld
+ ELF       platform/generic/firmware/fw_payload.elf
+ OBJCOPY   platform/generic/firmware/fw_payload.bin
+make[1]: Leaving directory '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi'
+GEN opensbi
+(exit=0)
+
+==================== 4. Verify firmware image layout (expected SM_TEXT_START=0x8001e000) ====================
+
+$ ls -l '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt'/*.bin
+-rwxrwxr-x 1 <USER> <USER>  534672 Oct 26 22:10 $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_dynamic.bin
+-rwxrwxr-x 1 <USER> <USER>  534632 Oct 26 22:10 $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_jump.bin
+-rwxrwxr-x 1 <USER> <USER> 2967272 Oct 26 22:10 $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/fw_payload.bin
+-rwxrwxr-x 1 <USER> <USER>   79856 Oct 26 22:10 $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/sm.bin
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -SW '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi/build/platform/generic/firmware/fw_payload.elf' | grep -E '^\s+\[|Name'
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        0000000080000000 001000 01ddb8 00  AX  0   0 16
+  [ 2] .sm               PROGBITS        000000008001e000 01f000 0137f2 00  AX  0   0 16
+  [ 3] .rodata           PROGBITS        0000000080032000 033000 0033c8 00   A  0   0  8
+  [ 4] .dynstr           STRTAB          00000000800353c8 0363c8 0002a8 00   A  0   0  1
+  [ 5] .gnu.hash         GNU_HASH        0000000080035670 036670 0000f4 00   A  8   0  8
+  [ 6] .eh_frame         PROGBITS        0000000080035768 036768 00b51c 00   A  0   0  8
+  [ 7] .eh_frame_hdr     PROGBITS        0000000080040c84 041c84 00166c 00   A  0   0  4
+  [ 8] .dynsym           DYNSYM          00000000800422f0 0432f0 000330 18   A  4   2  8
+  [ 9] .rela.dyn         RELA            0000000080043000 044000 002bf8 18   A  8   0  8
+  [10] .data             PROGBITS        0000000080080000 047000 002628 00  WA  0   0  8
+  [11] .dynamic          DYNAMIC         0000000080082628 049628 000110 10  WA  4   0  8
+  [12] .got              PROGBITS        0000000080082738 049738 000110 08  WA  0   0  8
+  [13] .got.plt          PROGBITS        0000000080082848 049848 000010 08  WA  0   0  8
+  [14] .htif             PROGBITS        0000000080082858 049858 000010 00  WA  0   0  8
+  [15] .bss              NOBITS          0000000080083000 049868 003120 00  WA  0   0  8
+  [16] .payload          PROGBITS        0000000080200000 04a000 0d46e8 00  AX  0   0 16
+  [17] .riscv.attributes RISCV_ATTRIBUTES 0000000000000000 11e6e8 000057 00      0   0  1
+  [18] .comment          PROGBITS        0000000000000000 11e73f 00002d 01  MS  0   0  1
+  [19] .debug_line       PROGBITS        0000000000000000 11e76c 05274a 00      0   0  1
+  [20] .debug_line_str   PROGBITS        0000000000000000 170eb6 005cd6 01  MS  0   0  1
+  [21] .debug_info       PROGBITS        0000000000000000 176b8c 06ae0c 00      0   0  1
+  [22] .debug_abbrev     PROGBITS        0000000000000000 1e1998 0155d6 00      0   0  1
+  [23] .debug_aranges    PROGBITS        0000000000000000 1f6f70 001a70 00      0   0 16
+  [24] .debug_str        PROGBITS        0000000000000000 1f89e0 00a49f 01  MS  0   0  1
+  [25] .debug_rnglists   PROGBITS        0000000000000000 202e7f 0046ac 00      0   0  1
+  [26] .debug_loclists   PROGBITS        0000000000000000 20752b 025765 00      0   0  1
+  [27] .symtab           SYMTAB          0000000000000000 22cc90 008bc8 18     28 903  8
+  [28] .strtab           STRTAB          0000000000000000 235858 005524 00      0   0  1
+  [29] .shstrtab         STRTAB          0000000000000000 23ad7c 000125 00      0   0  1
+(exit=0)
+sm_init=0x000000008001e000  payload_bin=0x0000000080200000  _fw_end=0x0000000080087000  sm.bin=79856 bytes
+SM range: 0x8001e000 - 0x800317f0
+
+$ riscv64-unknown-linux-gnu-objdump -d --start-address=0x000000008001e000 --stop-address=2147606536 '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt/opensbi/build/platform/generic/firmware/fw_payload.elf' | tail -n +7
+000000008001e000 <sm_init>:
+    8001e000:	34002173          	csrr	sp,mscratch
+    8001e004:	3e8010ef          	jal	8001f3ec <sm_init+0x13ec>
+(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/fw_params.env'
+# Firmware parameters verified at G05 (20261026T131039Z UTC)
+SM_TEXT_START=0x8001e000
+FW_TEXT_START=0x80000000
+PMP_COUNT=16
+OPENSBI_COMMIT=ef4520b1c63fc2770b10d952a800f9734f861b0a
+UBOOT_COMMIT=f919c3a889f0ec7d63a48b5d0ed064386b0980bd
+(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/artifacts/fw-release/SHA256SUMS'
+45c133527184bc773d90928ef99729f82636de2f06289551c045d0dddd1b3ac8  fw_dynamic.bin
+5ccb82f933ccb2038a7d649f17e64b9c66bd011b8c78312117cbe935fa397ae2  fw_jump.bin
+f52cbc9c0ba6c41e07f2aee28b022dc5801bc44102a527f008f75687da8a2a98  fw_payload.bin
+e8c49acf011b0cd8792dc805273626ecdbdecf13ceed560a7b11cfec9453689b  sm.bin
+a6880b571128c6c0c5f5837eb04a5e0736b596ed5f6efb2db0e5d8d43b06a211  fw_payload.elf
+(exit=0)
+
+==================== 5. QEMU smoke test (firmware only, 30 s, no disk/network) ====================
+serial console -> logs/G05_build_fw_20261026T131039Z_qemu_smoke.log
+--- head ---
+
+OpenSBI v1.5-51-gef4520b1
+   ____                    _____ ____ _____
+  / __ \                  / ____|  _ \_   _|
+ | |  | |_ __   ___ _ __ | (___ | |_) || |
+ | |  | | '_ \ / _ \ '_ \ \___ \|  _ < | |
+ | |__| | |_) |  __/ | | |____) | |_) || |_
+  \____/| .__/ \___|_| |_|_____/|____/_____|
+        | |
+        |_|
+
+Platform Name             : riscv-virtio,qemu
+Platform Features         : medeleg
+Platform HART Count       : 4
+Platform IPI Device       : aclint-mswi
+Platform Timer Device     : aclint-mtimer @ 10000000Hz
+Platform Console Device   : uart8250
+Platform HSM Device       : ---
+Platform PMU Device       : ---
+Platform Reboot Device    : syscon-reboot
+Platform Shutdown Device  : syscon-poweroff
+Platform Suspend Device   : ---
+Platform CPPC Device      : ---
+Firmware Base             : 0x80000000
+Firmware Size             : 613 KB
+Firmware RW Offset        : 0x80000
+Firmware RW Size          : 101 KB
+Firmware Heap Offset      : 0x8f000
+Firmware Heap Size        : 41 KB (total), 2 KB (reserved), 11 KB (used), 27 KB (free)
+Firmware Scratch Size     : 4096 B (total), 416 B (used), 3680 B (free)
+Runtime SBI Version       : 2.0
+
+Domain0 Name              : root
+Domain0 Boot HART         : 1
+Domain0 HARTs             : 0*,1*,2*,3*
+Domain0 Region00          : 0x0000000000100000-0x0000000000100fff M: (I,R,W) S/U: (R,W)
+Domain0 Region01          : 0x0000000010000000-0x0000000010000fff M: (I,R,W) S/U: (R,W)
+Domain0 Region02          : 0x0000000002000000-0x000000000200ffff M: (I,R,W) S/U: ()
+Domain0 Region03          : 0x0000000080080000-0x000000008009ffff M: (R,W) S/U: ()
+Domain0 Region04          : 0x0000000080000000-0x000000008007ffff M: (R,X) S/U: ()
+Domain0 Region05          : 0x000000000c400000-0x000000000c5fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region06          : 0x000000000c000000-0x000000000c3fffff M: (I,R,W) S/U: (R,W)
+Domain0 Region07          : 0x0000000000000000-0xffffffffffffffff M: () S/U: (R,W,X)
+Domain0 Next Address      : 0x0000000080200000
+Domain0 Next Arg1         : 0x0000000082200000
+Domain0 Next Mode         : S-mode
+Domain0 SysReset          : yes
+Domain0 SysSuspend        : yes
+
+Boot HART ID              : 1
+Boot HART Domain          : root
+Boot HART Priv Version    : v1.12
+Boot HART Base ISA        : rv64imafdch
+Boot HART ISA Extensions  : sstc,zicntr,zihpm,zicboz,zicbom,sdtrig,svadu
+Boot HART PMP Count       : 16
+Boot HART PMP Granularity : 2 bits
+Boot HART PMP Address Bits: 54
+Boot HART MHPM Info       : 16 (0x0007fff8)
+Boot HART Debug Triggers  : 2 triggers
+Boot HART MIDELEG         : 0x0000000000001666
+--- tail ---
+Model: riscv-virtio,qemu
+DRAM:  4 GiB
+Core:  30 devices, 13 uclasses, devicetree: board
+Flash: 32 MiB
+Loading Environment from nowhere... OK
+In:    serial,usbkbd
+Out:   serial,vidconsole
+Err:   serial,vidconsole
+No USB controllers found
+Net:   No ethernet found.
+[?25h
+Working FDT set to 17eefb330
+Hit any key to stop autoboot:  2  1  0 
+
+Device 0: unknown device
+
+Device 1: unknown device
+scanning bus for devices...
+
+Device 0: unknown device
+starting USB...
+No USB controllers found
+No ethernet found.
+No ethernet found.
+=> qemu-system-riscv64: terminating on signal 15 from pid 25911 (timeout)
+
+==================== SUMMARY ====================
+[PASS] MAIN_TASK.md re-read at G05
+[PASS] opensbi staged + qemu.patch applied
+[PASS] u-boot staged (v2024.10)
+[PASS] u-boot.bin built (870112 bytes)
+[PASS] firmware build pass1
+[PASS] sm_init (0x000000008001e000) == SM_TEXT_START
+[PASS] embedded .sm section == sm.bin
+[PASS] SM ends before U-Boot payload (0x800317f0 <= 0x0000000080200000)
+[PASS] smoke: OpenSBI banner
+[PASS] smoke: U-Boot 2024.10 started (SM handed off to S-mode)
+[PASS] smoke: no panic/trap keywords
+
+RESULT: FAIL=0 WARN=0

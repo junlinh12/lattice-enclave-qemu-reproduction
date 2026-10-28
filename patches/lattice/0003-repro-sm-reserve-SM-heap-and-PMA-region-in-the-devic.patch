@@ -1,0 +1,82 @@
+From fc60ba3b52a2ebd7218622fac38b650ce5172f62 Mon Sep 17 00:00:00 2001
+From: lattice-repro <repro@localhost>
+Date: Mon, 26 May 2025 00:00:00 +0000
+Subject: [PATCH 3/3] repro: sm - reserve SM heap and PMA region in the device
+ tree
+
+init_pma() denies host (S/U-mode) access to the SM heap and PMA metadata
+area that platform.rs places directly after the OpenSBI region
+(0x800a0000-0x800f0000 on qemu-virt), but the step that should publish
+this to the next stage ("update the reserved memory area") is commented
+out. Linux therefore treats the pages as free RAM; once the page
+allocator hands them out (memory pressure, shutdown), every hart spins
+on store access faults (mcause=7) and the system hangs.
+
+Extend OpenSBI's reserved-memory node that ends at the SBI region end so
+that it also covers the heap and PMA area, using the existing helper
+DeviceInfo::update_reserved_mem_region_size(); the node is located
+by parsing /reserved-memory for the entry that ends at the SBI region end.
+---
+ crates/sm/src/init.rs | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/crates/sm/src/init.rs b/crates/sm/src/init.rs
+index f3f4a54..494c5fb 100644
+--- a/crates/sm/src/init.rs
++++ b/crates/sm/src/init.rs
+@@ -44,7 +44,7 @@ unsafe fn boothart_init<P: Platform>(platform: &P, fdt: usize) {
+     #[allow(static_mut_refs)]
+     let sm = unsafe { crate::SM.assume_init_mut() };
+ 
+-    let device = DeviceInfo::new(fdt as *const u8).unwrap();
++    let mut device = DeviceInfo::new(fdt as *const u8).unwrap();
+ 
+     init_console_uart(device.get_uart().unwrap());
+ 
+@@ -76,6 +76,46 @@ unsafe fn boothart_init<P: Platform>(platform: &P, fdt: usize) {
+     init_pma(sm, platform);
+     log::debug!("Inited pma");
+ 
++    // [repro 0003] Reserve the SM heap + PMA region in the device tree handed
++    // to the next stage. init_pma() makes these pages inaccessible to the host
++    // via PMP, but the DT update step ("update the reserved memory area",
++    // commented out below) is missing upstream, so Linux treats them as free
++    // RAM and, under memory pressure, spins forever on store access faults
++    // (mcause=7). Extend OpenSBI's reserved-memory node that ends at the SBI
++    // region end so that it also covers [heap.start, pma.end).
++    {
++        let sbi = platform.get_sbi_region();
++        let heap = platform.get_heap_region();
++        let pma = platform.get_pma_region();
++        log::info!("[repro] sbi {:#x?} heap {:#x?} pma {:#x?}", sbi, heap, pma);
++        // find the reserved-memory node (created by OpenSBI) that ends where
++        // the SM heap begins, then grow it up to the end of the PMA area
++        let mut node_start: Option<usize> = None;
++        if let Some(rm) = device.fdt.find_node("/reserved-memory") {
++            for child in rm.children() {
++                if let Some(r) = child.reg().and_then(|mut it| it.next()) {
++                    let s = r.starting_address as usize;
++                    let e = s + r.size.unwrap_or(0);
++                    if e == sbi.end && s < sbi.end {
++                        node_start = Some(s);
++                        break;
++                    }
++                }
++            }
++        }
++        match node_start
++            .and_then(|s| device.update_reserved_mem_region_size(s, pma.end - s).map(|_| s))
++        {
++            Some(s) => log::info!(
++                "[repro] reserved-memory {:#x}..{:#x} extended to {:#x} (SM heap+PMA)",
++                s,
++                sbi.end,
++                pma.end
++            ),
++            None => log::warn!("[repro] SM heap/PMA {:#x}..{:#x} NOT reserved in DT", sbi.end, pma.end),
++        }
++    }
++
+     init_enclave(sm);
+     log::debug!("Inited enclave");
+ 

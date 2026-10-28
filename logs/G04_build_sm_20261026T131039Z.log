@@ -1,0 +1,208 @@
+
+==================== META ====================
+gate=G04 timestamp_utc=20261026T131039Z SM_TEXT_START=0x8001e000 FW_TEXT_START=0x80000000 PMP_COUNT=16
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice' log --oneline -3
+9c3439d repro: add Cargo.lock generated with nightly-2024-11-27
+c79e40c repro: workspace - drop missing "tests" member, exclude htee_* crates
+05664a2 update
+(exit=0)
+
+$ cd '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice' && rustc -V && cargo -V
+rustc 1.85.0-nightly (dff3e7ccd 2024-11-26)
+cargo 1.85.0-nightly (4c39aaff6 2024-11-25)
+(exit=0)
+
+==================== Build SM: profile=debug ====================
+full cargo output -> logs/G04_build_sm_20261026T131039Z_cargo_debug.log
+make exit=0
+    Finished `dev` profile [optimized + debuginfo] target(s) in 0.05s
+warning tally:
+    941 warning: unexpected X condition name: X
+     13 warning: X (lib) generated 1 warning (1 duplicate)
+      5 warning: unused import: X
+      3 warning: X (lib) generated 2 warnings (1 duplicate)
+      3 warning: method X should have a snake case name
+      2 warning: unused macro definition: X
+      2 warning: function X should have a snake case name
+      1 warning: X (lib) generated 943 warnings (1 duplicate)
+build_time_sec=0
+
+==================== Verify SM artifacts: debug ====================
+
+$ file '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt: ELF 64-bit LSB executable, UCB RISC-V, RVC, soft-float ABI, version 1 (SYSV), statically linked, with debug_info, not stripped
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -h '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt' | grep -E 'Class|Machine|Entry|Flags'
+  Class:                             ELF64
+  Machine:                           RISC-V
+  Entry point address:               0x8001e000
+  Flags:                             0x1, RVC, soft-float ABI
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -SW '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt' | grep -E '^\s+\[' 
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        000000008001e000 001000 01295a 00  AX  0   0 16
+  [ 2] .rodata           PROGBITS        0000000080030960 013960 005f18 00  AM  0   0  8
+  [ 3] .data             PROGBITS        0000000080036878 019878 0003d8 00  WA  0   0  8
+  [ 4] .debug_loc        PROGBITS        0000000000000000 019c50 0452d0 00      0   0  1
+  [ 5] .debug_abbrev     PROGBITS        0000000000000000 05ef20 0010b5 00      0   0  1
+  [ 6] .debug_info       PROGBITS        0000000000000000 05ffd5 053be9 00      0   0  1
+  [ 7] .debug_aranges    PROGBITS        0000000000000000 0b3bbe 001630 00      0   0  1
+  [ 8] .debug_ranges     PROGBITS        0000000000000000 0b51ee 0210a0 00      0   0  1
+  [ 9] .debug_str        PROGBITS        0000000000000000 0d628e 03a6e9 01  MS  0   0  1
+  [10] .comment          PROGBITS        0000000000000000 110977 000093 01  MS  0   0  1
+  [11] .riscv.attributes RISCV_ATTRIBUTES 0000000000000000 110a0a 000034 00      0   0  1
+  [12] .debug_line       PROGBITS        0000000000000000 110a3e 024dff 00      0   0  1
+  [13] .symtab           SYMTAB          0000000000000000 135840 0a96f8 18     15 28916  8
+  [14] .shstrtab         STRTAB          0000000000000000 1def38 0000a3 00      0   0  1
+  [15] .strtab           STRTAB          0000000000000000 1defdb 02ff73 00      0   0  1
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-size -A '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt  :
+section                size         addr
+.text                 76122   2147606528
+.rodata               24344   2147682656
+.data                   984   2147707000
+.debug_loc           283344            0
+.debug_abbrev          4277            0
+.debug_info          343017            0
+.debug_aranges         5680            0
+.debug_ranges        135328            0
+.debug_str           239337            0
+.comment                147            0
+.riscv.attributes        52            0
+.debug_line          151039            0
+Total               1263671
+
+
+(exit=0)
+entry=0x8001e000  .text=0x000000008001e000  expected=0x8001e000
+
+$ riscv64-unknown-linux-gnu-objdump -d --start-address=0x8001e000 --stop-address=2147606560 '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/debug/qemu-virt' | tail -n +7
+000000008001e000 <_start>:
+    8001e000:	34002173          	.insn	4, 0x34002173
+    8001e004:	384000ef          	jal	8001e388 <_ZN2sm4init4init17h03bbe454a9f97884E>
+
+000000008001e008 <_ZN3pma14PhysMemAreaMgr7get_pma17h4c1287e3d2f08352E>:
+    8001e008:	1141                	addi	sp,sp,-16
+    8001e00a:	7194                	ld	a3,32(a1)
+    8001e00c:	cead                	beqz	a3,8001e086 <_ZN3pma14PhysMemAreaMgr7get_pma17h4c1287e3d2f08352E+0x7e>
+    8001e00e:	02058713          	addi	a4,a1,32
+    8001e012:	e402                	sd	zero,8(sp)
+    8001e014:	00810293          	addi	t0,sp,8
+    8001e018:	4885                	li	a7,1
+    8001e01a:	0ff00813          	li	a6,255
+    8001e01e:	a801                	j	8001e02e <_ZN3pma14PhysMemAreaMgr7get_pma17h4c1287e3d2f08352E+0x26>
+(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/artifacts/sm-debug/SHA256SUMS'
+ff76a1b62150ba311f0c98d77f53d407fec7ce5ff6aef58ee6126af75089b55e  qemu-virt.elf
+71108daf3ee98b8ebc24a61808f331c23afe227f50b5e7ff1ccd41b0a8c0ef5d  sm.bin
+(exit=0)
+
+==================== Build SM: profile=release ====================
+full cargo output -> logs/G04_build_sm_20261026T131039Z_cargo_release.log
+make exit=0
+    Finished `release` profile [optimized] target(s) in 0.05s
+warning tally:
+    941 warning: unexpected X condition name: X
+     13 warning: X (lib) generated 1 warning (1 duplicate)
+      7 warning: unused import: X
+      3 warning: method X should have a snake case name
+      2 warning: X (lib) generated 2 warnings (1 duplicate)
+      2 warning: unused macro definition: X
+      2 warning: function X should have a snake case name
+      1 warning: X (lib) generated 943 warnings (1 duplicate)
+build_time_sec=0
+
+==================== Verify SM artifacts: release ====================
+
+$ file '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt: ELF 64-bit LSB executable, UCB RISC-V, RVC, soft-float ABI, version 1 (SYSV), statically linked, not stripped
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -h '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt' | grep -E 'Class|Machine|Entry|Flags'
+  Class:                             ELF64
+  Machine:                           RISC-V
+  Entry point address:               0x8001e000
+  Flags:                             0x1, RVC, soft-float ABI
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -SW '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt' | grep -E '^\s+\[' 
+  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0
+  [ 1] .text             PROGBITS        000000008001e000 001000 00f9b8 00  AX  0   0 16
+  [ 2] .rodata           PROGBITS        000000008002d9b8 0109b8 003a60 00  AM  0   0  8
+  [ 3] .data             PROGBITS        0000000080031418 014418 0003d8 00  WA  0   0  8
+  [ 4] .comment          PROGBITS        0000000000000000 0147f0 000093 01  MS  0   0  1
+  [ 5] .riscv.attributes RISCV_ATTRIBUTES 0000000000000000 014883 000034 00      0   0  1
+  [ 6] .symtab           SYMTAB          0000000000000000 0148b8 024f00 18      8 6303  8
+  [ 7] .shstrtab         STRTAB          0000000000000000 0397b8 00004a 00      0   0  1
+  [ 8] .strtab           STRTAB          0000000000000000 039802 00ed43 00      0   0  1
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-size -A '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt  :
+section              size         addr
+.text               63928   2147606528
+.rodata             14944   2147670456
+.data                 984   2147685400
+.comment              147            0
+.riscv.attributes      52            0
+Total               80055
+
+
+(exit=0)
+entry=0x8001e000  .text=0x000000008001e000  expected=0x8001e000
+
+$ riscv64-unknown-linux-gnu-objdump -d --start-address=0x8001e000 --stop-address=2147606560 '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/qemu-virt' | tail -n +7
+000000008001e000 <_start>:
+    8001e000:	34002173          	.insn	4, 0x34002173
+    8001e004:	3e8010ef          	jal	8001f3ec <_ZN2sm4init4init17h28ac4ac2cec1136cE>
+
+000000008001e008 <_ZN10trap_proxy9TrapProxy10_jump_next17hff75b04f6f4e8009E>:
+    8001e008:	02853283          	ld	t0,40(a0)
+    8001e00c:	6928                	ld	a0,80(a0)
+    8001e00e:	0060006f          	j	8001e014 <_ZN10trap_proxy9TrapProxy13_redirect_sbi17h113bfeef9ac6be72E>
+	...
+
+000000008001e014 <_ZN10trap_proxy9TrapProxy13_redirect_sbi17h113bfeef9ac6be72E>:
+    8001e014:	a001                	j	8001e014 <_ZN10trap_proxy9TrapProxy13_redirect_sbi17h113bfeef9ac6be72E>
+	...
+(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/artifacts/sm-release/SHA256SUMS'
+d1e3879e4ff798cf89b81371844f143e1ea7cff085478594090c6a9e6757c921  qemu-virt.elf
+e8c49acf011b0cd8792dc805273626ecdbdecf13ceed560a7b11cfec9453689b  sm.bin
+(exit=0)
+
+==================== Lockfile integrity ====================
+
+==================== Disk usage ====================
+
+$ du -sh '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target' '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt' 2>/dev/null
+242M	$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target
+84K	$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/build/qemu-virt
+(exit=0)
+
+==================== SUMMARY ====================
+[PASS] work tree clean before build
+[PASS] SM build (debug) in 0 s
+[PASS] ELF exists (debug)
+[PASS] entry point == SM_TEXT_START (debug)
+[PASS] .text starts at SM_TEXT_START (debug)
+[PASS] ELF machine is RISC-V (debug)
+[PASS] sm.bin produced (debug, 101456 bytes)
+[PASS] SM build (release) in 0 s
+[PASS] ELF exists (release)
+[PASS] entry point == SM_TEXT_START (release)
+[PASS] .text starts at SM_TEXT_START (release)
+[PASS] ELF machine is RISC-V (release)
+[PASS] sm.bin produced (release, 79856 bytes)
+[PASS] Cargo.lock unchanged by build
+
+RESULT: FAIL=0 WARN=0

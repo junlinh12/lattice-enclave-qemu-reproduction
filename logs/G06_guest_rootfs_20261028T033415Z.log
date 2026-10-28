@@ -1,0 +1,159 @@
+
+==================== META ====================
+gate=G06 timestamp_utc=20261028T033415Z image=ubuntu-24.04.5-preinstalled-server-riscv64.img.xz
+
+==================== 0. Prerequisites ====================
+ok      curl
+ok      xz
+ok      sha256sum
+ok      qemu-img
+ok      ssh-keygen
+ok      openssl
+ok      cloud-localds
+ok      fdisk
+
+$ df -h '$HOME/projects/lattice-enclave-qemu-reproduction/work/images' | tail -1
+/dev/nvme0n1p2  915G  372G  497G  43% /
+(exit=0)
+
+==================== 1. Download & verify ====================
+SHA256SUMS signature valid with ubuntu-archive-keyring.gpg
+expected sha256(ubuntu-24.04.5-preinstalled-server-riscv64.img.xz) = 1cbd4b187f33356107daa637a5588d8f8a1744c7a012189e9c5e6d0b177825c4
+downloading ubuntu-24.04.5-preinstalled-server-riscv64.img.xz (~1.2 GB) ...
+ 97 1200M   97 1166M    0     0  16.1M      0  0:01:14  0:01:12  0:00:02 28.1M
+100 1200M  100 1200M    0     0  16.4M      0  0:01:13  0:01:13 --:--:-- 32.0M
+
+==================== 1b. Guest software baseline (from official manifest) ====================
+
+$ grep -E '^(linux-image-|linux-generic|linux-riscv|cloud-init|grub-efi-riscv64|openssh-server|u-boot)' '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/ubuntu-24.04.5-preinstalled-server-riscv64.manifest'
+cloud-init	26.1-0ubuntu1~24.04.1
+cloud-initramfs-copymods	0.49~24.04.1
+cloud-initramfs-dyn-netconf	0.49~24.04.1
+grub-efi-riscv64	2.12-1ubuntu7.3
+grub-efi-riscv64-bin	2.12-1ubuntu7.3
+linux-generic	7.0.0-31.31.1~24.04.1+1
+linux-image-7.0.0-31-generic	7.0.0-31.31.1~24.04.1
+linux-image-generic	7.0.0-31.31.1~24.04.1+1
+linux-riscv-7.0-headers-7.0.0-31	7.0.0-31.31.1~24.04.1
+linux-riscv-7.0-tools-7.0.0-31	7.0.0-31.31.1~24.04.1
+openssh-server	1:9.6p1-3ubuntu13.19
+u-boot-tools	2025.10-0ubuntu0.24.04.2
+(exit=0)
+
+==================== 2. Working disk image ====================
+
+$ xz -dk -T0 -c '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/ubuntu-24.04.5-preinstalled-server-riscv64.img.xz' > '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img'
+(exit=0)
+
+$ qemu-img resize -f raw '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img' 32G
+Image resized.
+(exit=0)
+
+$ qemu-img info '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img'
+image: $HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img
+file format: raw
+virtual size: 32 GiB (34359738368 bytes)
+disk size: 2.66 GiB
+Child node '/file':
+    filename: $HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img
+    protocol type: file
+    file length: 32 GiB (34359738368 bytes)
+    disk size: 2.66 GiB
+(exit=0)
+
+$ fdisk -l '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img' 2>/dev/null | sed -n '1,20p'
+Disk $HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img: 32 GiB, 34359738368 bytes, 67108864 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: gpt
+Disk identifier: 7B5893B5-C083-4862-BFBA-D07AFCA9C7EE
+
+Device                                                                             Start     End Sectors  Size Type
+$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img1  235520 9437150 9201631  4.4G Linux filesystem
+$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img12 227328  235519    8192    4M Linux filesystem
+$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img13     34    2081    2048    1M HiFive FSBL
+$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img14   2082   10239    8158    4M HiFive BBL
+$HOME/projects/lattice-enclave-qemu-reproduction/work/images/rootfs.img15  10240  227327  217088  106M EFI System
+
+Partition table entries are not in disk order.
+(exit=0)
+
+==================== 3. Project-only guest credentials (values are NOT logged) ====================
+
+$ ssh-keygen -lf '$HOME/projects/lattice-enclave-qemu-reproduction/work/guest/id_ed25519.pub'
+256 SHA256:XczJGt2HTdOutLnsMVTnCJrycedNR06ILwp4yvUDI74 lattice-repro-guest (ED25519)
+(exit=0)
+console password stored in work/guest/console_password (mode 600, not printed)
+
+==================== 4. cloud-init NoCloud seed ====================
+
+$ cloud-localds '$HOME/projects/lattice-enclave-qemu-reproduction/work/images/seed.img' '$HOME/projects/lattice-enclave-qemu-reproduction/work/guest/user-data' '$HOME/projects/lattice-enclave-qemu-reproduction/work/guest/meta-data'
+(exit=0)
+user-data (password hash and key redacted):
+#cloud-config
+hostname: lattice-guest
+users:
+  - name: ubuntu
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: "<REDACTED>"
+    passwd: "<REDACTED>"
+    ssh_authorized_keys:
+      - ssh-ed25519 <REDACTED>
+ssh_pwauth: false
+chpasswd:
+  expire: false
+growpart:
+  mode: auto
+  devices: ["/"]
+package_update: true
+packages:
+  - build-essential
+  - git
+runcmd:
+  - [ sh, -c, "apt-get install -y linux-headers-$(uname -r) && touch /var/lib/lattice-headers-ok" ]
+final_message: "LATTICE_CLOUD_INIT_DONE after $UPTIME seconds"
+
+==================== 5. Files ====================
+
+$ ls -la '$HOME/projects/lattice-enclave-qemu-reproduction/work/images' '$HOME/projects/lattice-enclave-qemu-reproduction/work/guest' | awk '{print $1, $5, $9}'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/guest:  
+total  
+drwx------ 4096 .
+drwxrwxr-x 4096 ..
+-rw------- 25 console_password
+-rw------- 411 id_ed25519
+-rw-r--r-- 101 id_ed25519.pub
+-rw------- 61 meta-data
+-rw------- 729 user-data
+  
+$HOME/projects/lattice-enclave-qemu-reproduction/work/images:  
+total  
+drwxrwxr-x 4096 .
+drwxrwxr-x 4096 ..
+-rw-rw-r-- 34359738368 rootfs.img
+-rw-rw-r-- 374784 seed.img
+-rw-rw-r-- 5694 SHA256SUMS
+-rw-rw-r-- 833 SHA256SUMS.gpg
+-rw-rw-r-- 1258708816 ubuntu-24.04.5-preinstalled-server-riscv64.img.xz
+-rw-rw-r-- 22756 ubuntu-24.04.5-preinstalled-server-riscv64.manifest
+(exit=0)
+
+$ du -sh '$HOME/projects/lattice-enclave-qemu-reproduction/work/images'
+3.9G	$HOME/projects/lattice-enclave-qemu-reproduction/work/images
+(exit=0)
+
+==================== SUMMARY ====================
+[PASS] all tools present
+[PASS] work/ is gitignored (secrets stay local)
+[PASS] SHA256SUMS, .gpg, manifest downloaded
+[PASS] SHA256SUMS GPG signature verified
+[PASS] image SHA256 verified
+[PASS] rootfs.img created and grown to 32G (root partition grows on first boot via cloud-init)
+[PASS] SSH key generated
+[PASS] console password generated
+[PASS] seed.img created
+
+RESULT: FAIL=0 WARN=0

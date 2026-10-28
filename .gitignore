@@ -1,0 +1,19 @@
+# Allowlist: everything is ignored unless explicitly listed below.
+/*
+!/.gitignore
+!/README.md
+!/docs/
+!/scripts/
+!/patches/
+!/tests/
+!/logs/
+!/env.sh
+!/fw_params.env
+!/SOURCES_PINNED.txt
+# Never publish: artifacts of an earlier, unsanitized attempt
+/scripts/GATE0*
+/logs/GATE0*
+/logs/.*
+/logs/*_raw.log
+# build outputs inside allowed dirs
+/tests/**/*.o

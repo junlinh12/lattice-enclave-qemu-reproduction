@@ -1,0 +1,224 @@
+
+==================== META ====================
+gate=G08 timestamp_utc=20261028T053046Z
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice' log --oneline -3
+9c3439d repro: add Cargo.lock generated with nightly-2024-11-27
+c79e40c repro: workspace - drop missing "tests" member, exclude htee_* crates
+05664a2 update
+(exit=0)
+
+==================== a. Enclave runtime (runtime/Makefile, release) ====================
+
+$ cd '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/runtime' && make build
+(full output -> logs/G08_userland_module_20261028T053046Z_runtime.log)
+    Finished `release` profile [optimized] target(s) in 1.00s
+warning tally:
+    941 warning: unexpected X condition name: X
+     37 warning: unused import: X
+     36 warning: unused variable: X
+     11 warning: function X is never used
+      9 warning: constant X is never used
+(exit=0)
+
+$ riscv64-unknown-linux-gnu-readelf -h '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64imac-unknown-none-elf/release/runtime' | grep -E 'Machine|Entry'
+  Machine:                           RISC-V
+  Entry point address:               0xffffffff80000000
+(exit=0)
+
+==================== b. Host-side client (crates/client, release) ====================
+
+$ cd '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/client' && cargo build --release --locked
+(full output -> logs/G08_userland_module_20261028T053046Z_client.log)
+    Finished `release` profile [optimized] target(s) in 8.08s
+warning tally:
+    941 warning: unexpected X condition name: X
+      4 warning: unused import: X
+      4 warning: function X is never used
+      3 warning: unused variable: X
+      3 warning: method X should have a snake case name
+(exit=0)
+
+$ file '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64gc-unknown-linux-gnu/release/client'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64gc-unknown-linux-gnu/release/client: ELF 64-bit LSB pie executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-riscv64-lp64d.so.1, BuildID[sha1]=9a47669eb910a1652e1913df744968b2b4e43eba, for GNU/Linux 4.15.0, not stripped
+(exit=0)
+
+==================== c. test_launcher (crates/test_launcher, release) ====================
+
+$ cd '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/test_launcher' && cargo build --release --locked
+(full output -> logs/G08_userland_module_20261028T053046Z_test_launcher.log)
+    Finished `release` profile [optimized] target(s) in 1.80s
+warning tally:
+      1 warning: X (bin "test_launcher") generated 1 warning
+      1 warning: unstable feature specified for X: X
+      1 warning: $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/runtime/Cargo.toml: unused manifest key: target.riscv64imac-unknown-none-elf.linker
+      1 warning: $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/nostd-rbtree/Cargo.toml: no edition set: defaulting to the 2015 edition while the latest is 2024
+      1 warning: $HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/crates/macros/Cargo.toml: unused manifest key: proc_macro
+(exit=0)
+
+$ file '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64gc-unknown-linux-gnu/release/test_launcher'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice/target/riscv64gc-unknown-linux-gnu/release/test_launcher: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), statically linked, BuildID[sha1]=0699e40439e87c293f98975fc2f7e2e10ef1f9e3, for GNU/Linux 4.15.0, not stripped
+(exit=0)
+
+==================== d. Test payload: tests/enclave/hello.c (static riscv64 Linux ELF) ====================
+created tests/enclave/hello.c
+
+$ riscv64-unknown-linux-gnu-gcc -static -O2 -o '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/hello' '$HOME/projects/lattice-enclave-qemu-reproduction/tests/enclave/hello.c'
+$HOME/projects/lattice-enclave-qemu-reproduction/tests/enclave/hello.c: In function ‘main’:
+$HOME/projects/lattice-enclave-qemu-reproduction/tests/enclave/hello.c:8:5: warning: ignoring return value of ‘write’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+    8 |     write(1, msg, strlen(msg));
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~
+(exit=0)
+
+$ file '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/hello'
+$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/hello: ELF 64-bit LSB executable, UCB RISC-V, RVC, double-float ABI, version 1 (SYSV), statically linked, BuildID[sha1]=c9121e16a79cc112d06a68ba912ab527096a28ac, for GNU/Linux 4.15.0, not stripped
+(exit=0)
+
+==================== e. Stage directory ====================
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/config.toml'
+[binary]
+path = "./hello"
+
+[runtime]
+path = "./fw-rt.bin"
+
+[memory]
+size = "20m"
+shared_size = "16k"(exit=0)
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/stage/lattice/SHA256SUMS'
+80d492612aeab525a751803a53d63c6639f1887e808ea476b336bb05f1528943  ./client
+9029003be8d5f0cae8af7bd8e10b3b56070178c2a616691363fad9ce2219042b  ./config.toml
+0143fecc8bc94892a60ab21fd1637aa64944f08abafd233f326a71d5661da7d4  ./fw-rt.bin
+9ca5a46500850bfd57f9b5ecabd61395de059ec16269f99d511b19bfd05e5890  ./hello
+ba9dc685f9361320cade173940f74f8f13f803b9232467984fb62c208c9455e9  ./SHA256SUMS
+61b4b73ab5c980510714a167af7cd7d2e018b19180fd3165dea9d79b58961478  ./tee_mod/main.c
+a0fac2b32e232c67314cf252a2a2aad9b4400bfb96a86c7c4669d74f8666c264  ./tee_mod/Makefile
+5d89cc88fb6bf7e6ed9182c1f2129f968966540ccf0d75d23488d4acfad16e0f  ./test_launcher
+(exit=0)
+
+==================== f. Boot guest ====================
+
+[guest]$ uname -r; nproc
+7.0.0-31-generic
+4
+(exit=0)
+
+==================== g. Copy stage to guest (~/lattice) ====================
+
+[guest]$ cd ~/lattice && sha256sum -c --quiet SHA256SUMS && echo checksums-OK
+./SHA256SUMS: FAILED
+sha256sum: WARNING: 1 computed checksum did NOT match
+(exit=1)
+
+==================== h. Build teectl.ko in guest (upstream: make build) ====================
+
+[guest]$ cd ~/lattice/tee_mod && make build 2>&1 | tail -25 && ls -l teectl.ko
+make -C /lib/modules/7.0.0-31-generic/build M=/home/ubuntu/lattice/tee_mod modules
+make[1]: Entering directory '/usr/src/linux-headers-7.0.0-31-generic'
+make[2]: Entering directory '/home/ubuntu/lattice/tee_mod'
+warning: the compiler differs from the one used to build the kernel
+  The kernel was built by: riscv64-linux-gnu-gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+  You are using:           gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+warning: pahole version differs from the one used to build the kernel
+  The kernel was built with: 125
+  You are using:             0
+  CC [M]  main.o
+main.c:50:17: warning: ‘region_id’ defined but not used [-Wunused-variable]
+   50 | static atomic_t region_id = ATOMIC_INIT(0);
+      |                 ^~~~~~~~~
+  LD [M]  teectl.o
+  MODPOST Module.symvers
+  CC [M]  teectl.mod.o
+  CC [M]  .module-common.o
+  LD [M]  teectl.ko
+  BTF [M] teectl.ko
+Skipping BTF generation for teectl.ko due to unavailability of vmlinux
+make[2]: Leaving directory '/home/ubuntu/lattice/tee_mod'
+make[1]: Leaving directory '/usr/src/linux-headers-7.0.0-31-generic'
+-rw-rw-r-- 1 ubuntu ubuntu 788792 Oct 28 05:32 teectl.ko
+(exit=0)
+
+[guest]$ cd ~/lattice/tee_mod && make build 2>&1 | grep -ciE "warning:" ; modinfo ./teectl.ko | grep -E "^(name|vermagic|license|description)"
+2
+description:    TEE control
+license:        GPL
+name:           teectl
+vermagic:       7.0.0-31-generic SMP preempt mod_unload modversions riscv
+(exit=0)
+
+==================== i. Load module ====================
+
+[guest]$ sudo insmod ~/lattice/tee_mod/teectl.ko && lsmod | grep -w teectl && ls -l /dev/teectl
+teectl                 36864  0
+crw------- 1 root root 10, 262 Oct 28 05:32 /dev/teectl
+(exit=0)
+
+[guest]$ sudo dmesg | tail -15
+[   15.653710] audit: type=1400 audit(1793165486.656:8): apparmor="STATUS" operation="profile_load" profile="unconfined" name="brave" pid=493 comm="apparmor_parser"
+[   15.671425] audit: type=1400 audit(1793165486.676:9): apparmor="STATUS" operation="profile_load" profile="unconfined" name="ch-checkns" pid=496 comm="apparmor_parser"
+[   15.673061] audit: type=1400 audit(1793165486.676:10): apparmor="STATUS" operation="profile_load" profile="unconfined" name="cam" pid=495 comm="apparmor_parser"
+[   15.674917] audit: type=1400 audit(1793165486.680:11): apparmor="STATUS" operation="profile_load" profile="unconfined" name="chrome" pid=498 comm="apparmor_parser"
+[   17.478492] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[   17.480114] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[   17.480423] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[   22.434383] kauditd_printk_skb: 107 callbacks suppressed
+[   22.435326] audit: type=1400 audit(1793165493.436:119): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="rsyslogd" pid=691 comm="apparmor_parser"
+[   23.979296] NET: Registered PF_QIPCRTR protocol family
+[   24.012325] loop0: detected capacity change from 0 to 8
+[   24.760281] audit: type=1400 audit(1793165495.764:120): apparmor="STATUS" operation="profile_replace" info="same as current profile, skipping" profile="unconfined" name="/usr/lib/snapd/snap-confine" pid=804 comm="apparmor_parser"
+[   28.037057] systemd-journald[310]: /var/log/journal/91cf3e53f5654fe79aad8b40985dc8fc/user-1000.journal: Journal file uses a different sequence number ID, rotating.
+[   69.192701] teectl: loading out-of-tree module taints kernel.
+[   69.194047] teectl: module verification failed: signature and/or required key missing - tainting kernel
+(exit=0)
+
+[guest]$ sudo dmesg --level=err,crit,alert,emerg | tail -10
+(exit=0)
+
+==================== j. Userland sanity in guest ====================
+
+[guest]$ cd ~/lattice && ldd ./client | head; ./client --help
+	linux-vdso.so.1 (0x00007fff78a29000)
+	libgcc_s.so.1 => /lib/riscv64-linux-gnu/libgcc_s.so.1 (0x00007fff78930000)
+	libc.so.6 => /lib/riscv64-linux-gnu/libc.so.6 (0x00007fff787b0000)
+	/lib/ld-linux-riscv64-lp64d.so.1 (0x00007fff78a2b000)
+Usage: client [OPTIONS] [BINARY]
+
+Arguments:
+  [BINARY]  binary path, override the binary path in config file
+
+Options:
+  -c, --config <CONFIG>  Config file path. Default value is config.toml
+  -l, --lde              
+  -l, --lse              
+  -h, --help             Print help
+(exit=0)
+
+[guest]$ cd ~/lattice && ./hello
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+(exit=0)
+
+==================== k. Shutdown ====================
+vm_stop: guest powered off
+
+==================== SUMMARY ====================
+[PASS] work tree (tracked files) clean
+[PASS] runtime built
+[PASS] runtime.bin (55680 bytes)
+[PASS] client built
+[PASS] client binary present
+[PASS] test_launcher built
+[PASS] hello (static) built
+[PASS] Cargo.lock unchanged by builds
+[PASS] QEMU started
+[PASS] SSH up after 46 s
+[PASS] stage copied
+[FAIL] stage checksum mismatch in guest
+[PASS] teectl.ko built in guest
+[PASS] teectl loaded, /dev/teectl present
+[PASS] client runs in guest (--help)
+[PASS] VM stopped
+
+RESULT: FAIL=1 WARN=0

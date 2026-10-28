@@ -1,0 +1,8 @@
+alloc size: 0x1400000
+fd: 3
+command: 0x40106b01
+mmap fd: 4
+size: 20971520
+mmap addr: 0x7ff425f9c000
+memory region: 0x7ff425f9c000 - 0x7ff42739c000
+create enclave

@@ -1,0 +1,14 @@
+alloc size: 0x1400000
+fd: 3
+command: 0x40106b01
+mmap fd: 4
+size: 20971520
+mmap addr: 0x7ff8ec90a000
+memory region: 0x7ff8ec90a000 - 0x7ff8edd0a000
+create enclave
+lue created
+eidx: 0x5
+LATTICE_ENCLAVE_HELLO: write(2) via runtime syscall proxy
+LATTICE_ENCLAVE_SUM=499999500000
+enclave finished
+__CLIENT_RC=0

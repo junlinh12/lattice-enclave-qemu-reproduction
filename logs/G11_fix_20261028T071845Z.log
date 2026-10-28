@@ -1,0 +1,140 @@
+
+==================== META ====================
+gate=G11 (v1) timestamp_utc=20261028T071845Z SM_TEXT_START=0x8001e000
+
+==================== 1. Patch 0003: reserve SM heap + PMA in the DT (crates/sm/src/init.rs) ====================
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice' diff --stat
+ crates/sm/src/init.rs | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 1 deletion(-)
+(exit=0)
+
+$ git -C '$HOME/projects/lattice-enclave-qemu-reproduction/work/Lattice' format-patch -q --no-signature -o '$HOME/projects/lattice-enclave-qemu-reproduction/patches/lattice' 05664a26af63e0898828a37b4387efc188388dbf..HEAD && ls -1 '$HOME/projects/lattice-enclave-qemu-reproduction/patches/lattice'
+0001-repro-workspace-drop-missing-tests-member-exclude-ht.patch
+0002-repro-add-Cargo.lock-generated-with-nightly-2024-11-.patch
+0003-repro-sm-reserve-SM-heap-and-PMA-region-in-the-devic.patch
+(exit=0)
+
+==================== 2. Rebuild firmware (upstream firmware.mk, release) ====================
+    Finished `release` profile [optimized] target(s) in 1.21s
+GEN opensbi
+(make exit=0, full log -> logs/G11_fix_20261028T071845Z_fw_build.log)
+sm_init=0x000000008001e000 expected=0x8001e000
+
+$ cat '$HOME/projects/lattice-enclave-qemu-reproduction/work/artifacts/fw-release-0003/SHA256SUMS'
+e73b9f84d0fbbcc0af464441897366144b76fd4b1607291d469e88f5c3854f3e  fw_payload.bin
+5a232656a65647e1668e4b89906c6ed033f197c20220c0da22fc3009163aa45b  fw_payload.elf
+7ede2dfb565a62b1ab584423a65d9dc53e25ae15d3f42654237cc69b7bb8d967  sm.bin
+(exit=0)
+
+==================== 3. Boot patched firmware, verify reservation ====================
+
+$ tr -d '\r' < '$HOME/projects/lattice-enclave-qemu-reproduction/logs/G11_fix_20261028T071845Z_serial.log' | grep -a '\[repro\]'
+hart 1 started[INFO] [repro] sbi 0x80000000..0x800a0000 heap 0x800a0000..0x800b0000 pma 0x800b0000..0x800f0000
+[INFO] [repro] reserved-memory 0x80080000..0x800a0000 extended to 0x800f0000 (SM heap+PMA)
+(exit=0)
+
+[guest, host-timeout 60s]$ for n in /proc/device-tree/reserved-memory/*/; do printf "%-28s " "$(basename $n)"; python3 -c "import sys,struct; a,s=struct.unpack(\">QQ\", open(sys.argv[1],\"rb\").read()[:16]); print(hex(a), \"-\", hex(a+s))" "$n/reg"; done; sudo dmesg | grep -i "reserved mem" | head
+mmode_resv0@80080000         0x80080000 - 0x800f0000
+mmode_resv1@80000000         0x80000000 - 0x80080000
+[    0.000000] OF: reserved mem: 0x0000000080000000..0x000000008007ffff (512 KiB) nomap non-reusable mmode_resv1@80000000
+[    0.000000] OF: reserved mem: 0x0000000080080000..0x00000000800effff (448 KiB) nomap non-reusable mmode_resv0@80080000
+(exit=0)
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+
+==================== 4. Re-run G10 memory-pressure experiment ====================
+
+[guest, host-timeout 120s]$ cd ~/lattice && sha256sum -c --quiet SHA256SUMS && echo checksums-OK && cd tee_mod && make build >/dev/null 2>&1 && sudo insmod teectl.ko && ls -l /dev/teectl
+checksums-OK
+crw------- 1 root root 10, 262 Oct 28 07:20 /dev/teectl
+(exit=0)
+
+[guest, host-timeout 180s]$ cd ~/lattice && sudo sh -c "nohup ./client --lse -c config.toml > lse.out 2>&1 < /dev/null &"; for i in $(seq 1 60); do grep -q "lse created" lse.out 2>/dev/null && break; sleep 2; done; tail -2 lse.out
+lse created
+eidx: 0x2
+(exit=0)
+
+[guest, host-timeout 300s]$ cd ~/lattice && for i in 1 2 3 4 5; do sudo timeout 120 ./client -c config.toml ./hello 2>&1 | grep -c "enclave finished"; done; sudo timeout 300 ./test_launcher "./client -c config.toml ./hello" 8 2>&1 | grep -c "enclave finished"
+1
+1
+1
+1
+1
+8
+(exit=0)
+fill size = 85% of MemAvailable = 3097 MB
+
+==================== 4a. Control: memfill with LSE alive (this hung in G10) ====================
+
+[guest, host-timeout 420s]$ cd ~/lattice && timeout 300 ./memfill 3097; echo __RC=$?
+MEMFILL_OK 3136 MB
+__RC=0
+(exit=0)
+
+[guest, host-timeout 120s]$ cd ~/lattice && free -m | head -2 && sudo dmesg | grep -iE 'Oops|BUG:|lockup|stall' | tail -3
+               total        used        free      shared  buff/cache   available
+Mem:            3900         341        3593           0          83        3558
+(exit=0)
+
+==================== 4b. LSE holder exit: map its pages, kill it, memfill again ====================
+
+[guest, host-timeout 60s]$ cd ~/lattice && pid=$(pgrep -f "[c]lient --lse"); r=$(grep "memory region" lse.out | awk "{print \$3, \$5}"); echo "pid=$pid region=$r"; sudo python3 pagemap.py $pid $r | tee lse_pages.txt
+pid=1474 region=0x7ff94aece000 0x7ff94aedd000
+VA 0x7ff94aece000 -> PA 0x0 not-present
+VA 0x7ff94aecf000 -> PA 0x0 not-present
+VA 0x7ff94aed0000 -> PA 0x0 not-present
+VA 0x7ff94aed1000 -> PA 0x0 not-present
+VA 0x7ff94aed2000 -> PA 0x0 not-present
+VA 0x7ff94aed3000 -> PA 0x0 not-present
+VA 0x7ff94aed4000 -> PA 0x0 not-present
+VA 0x7ff94aed5000 -> PA 0x0 not-present
+VA 0x7ff94aed6000 -> PA 0x0 not-present
+VA 0x7ff94aed7000 -> PA 0x0 not-present
+VA 0x7ff94aed8000 -> PA 0x0 not-present
+VA 0x7ff94aed9000 -> PA 0x0 not-present
+VA 0x7ff94aeda000 -> PA 0x0 not-present
+VA 0x7ff94aedb000 -> PA 0x0 not-present
+VA 0x7ff94aedc000 -> PA 0x0 not-present
+(exit=0)
+
+[guest, host-timeout 60s]$ sudo pkill -f "[c]lient --lse"; sleep 2; pgrep -af "[c]lient --lse" || echo "LSE holder gone"
+LSE holder gone
+(exit=0)
+
+[guest, host-timeout 420s]$ cd ~/lattice && timeout 300 ./memfill 3097; echo __RC=$?
+MEMFILL_OK 3136 MB
+__RC=0
+(exit=0)
+
+==================== 5. Graceful shutdown ====================
+vm_stop: guest powered off
+
+==================== 6. Serial: SM lines ====================
+62:hart 1 started[INFO] [repro] sbi 0x80000000..0x800a0000 heap 0x800a0000..0x800b0000 pma 0x800b0000..0x800f0000
+63:[INFO] [repro] reserved-memory 0x80080000..0x800a0000 extended to 0x800f0000 (SM heap+PMA)
+799:         Starting [0;1;39mlxd-installer.socket[0m - He…er to install lxd snap on demand...
+803:[[0;32m  OK  [0m] Listening on [0;1;39mlxd-installer.socket[0m …lper to install lxd snap on demand.
+827:[[0;32m  OK  [0m] Started [0;1;39mupdate-notifier-download.t…[0mhat failed at package install time.
+945:[[0;32m  OK  [0m] Stopped [0;1;39mupdate-notifier-download.t…[0mhat failed at package install time.
+1011:[[0;32m  OK  [0m] Closed [0;1;39mlxd-installer.socket[0m - Helper to install lxd snap on demand.
+
+==================== SUMMARY ====================
+[PASS] tests/tools/pagemap.py present
+[PASS] patch 0003 committed
+[PASS] firmware rebuilt with patch 0003
+[PASS] Cargo.lock unchanged
+[PASS] sm_init still at SM_TEXT_START
+[PASS] embedded .sm == new sm.bin
+[PASS] patched SM string present in sm.bin
+[PASS] QEMU started
+[PASS] SSH up after 46 s
+[PASS] SM logged the DT reservation
+[PASS] Linux sees a reserved-memory node covering 0x800a0000-0x800f0000
+[PASS] pre-condition: 5 sequential + 8 parallel LUEs executed
+[PASS] M-A memfill 3097 MB with LSE alive: OK (G10 hang fixed by patch 0003)
+[INFO] M-B memfill after LSE exit succeeded -> LSE-page hypothesis NOT supported
+[PASS] graceful poweroff completed
+[PASS] VM stopped
+
+RESULT: FAIL=0 WARN=0
